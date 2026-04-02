@@ -1,0 +1,2555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barplay — Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #12121a;
+  --surface2: #1a1a26;
+  --surface3: #222232;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --accent: #f0c14b;
+  --accent2: #ff6b6b;
+  --green: #4ade80;
+  --blue: #60a5fa;
+  --purple: #a78bfa;
+  --text: #f0f0f8;
+  --text2: #9898b8;
+  --text3: #5a5a7a;
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── TOP NAV ── */
+.top-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(10,10,15,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; height: 56px;
+}
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800; font-size: 22px;
+  color: var(--accent);
+  letter-spacing: -0.5px;
+}
+.logo span { color: var(--text3); font-weight: 400; font-size: 13px; margin-left: 8px; vertical-align: middle; font-family: 'DM Sans', sans-serif; }
+.view-toggle {
+  display: flex; gap: 4px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px; padding: 4px;
+}
+.view-btn {
+  padding: 6px 14px; border-radius: 7px; border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+  background: transparent; color: var(--text2);
+  transition: all 0.2s;
+}
+.view-btn.active { background: var(--accent); color: #0a0a0f; }
+.live-badge {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--green); font-weight: 500;
+}
+.live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--green);
+  animation: pulse-dot 1.8s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.7); }
+}
+
+/* ── VIEWS ── */
+.view { display: none; padding-top: 56px; min-height: 100vh; }
+.view.active { display: block; }
+
+/* ════════════════════════════════════════════
+   GUEST VIEW
+════════════════════════════════════════════ */
+.guest-view {
+  max-width: 430px; margin: 0 auto;
+  background: var(--bg);
+  position: relative;
+}
+
+/* Venue header */
+.venue-header {
+  padding: 20px 20px 16px;
+  background: linear-gradient(180deg, var(--surface) 0%, transparent 100%);
+}
+.venue-name {
+  font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px;
+  color: var(--text);
+}
+.venue-meta {
+  display: flex; align-items: center; gap: 12px; margin-top: 4px;
+}
+.venue-meta span {
+  font-size: 12px; color: var(--text3);
+}
+.table-chip {
+  background: var(--accent); color: #0a0a0f;
+  font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px;
+  font-family: 'Syne', sans-serif;
+}
+
+/* Game card */
+.game-card {
+  margin: 0 16px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.game-phase-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+.phase-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text2);
+}
+.phase-label.active { color: var(--green); }
+.round-timer {
+  font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.timer-track {
+  height: 3px; background: var(--surface3);
+}
+.timer-fill {
+  height: 3px; background: var(--accent);
+  transition: width 1s linear;
+}
+
+/* Question */
+.question-area { padding: 20px 16px 16px; }
+.mode-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(167,139,250,0.15); color: var(--purple);
+  font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px;
+  margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.06em;
+}
+.question-text {
+  font-family: 'Syne', sans-serif; font-weight: 600; font-size: 16px;
+  line-height: 1.4; color: var(--text); margin-bottom: 16px;
+}
+.answers-grid { display: flex; flex-direction: column; gap: 8px; }
+.answer-btn {
+  width: 100%; padding: 12px 14px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 400;
+  color: var(--text); text-align: left;
+  transition: all 0.18s; position: relative; overflow: hidden;
+}
+.answer-btn:hover { background: var(--surface3); border-color: var(--accent); color: var(--accent); }
+.answer-btn.correct {
+  background: rgba(74,222,128,0.15); border-color: var(--green); color: var(--green);
+}
+.answer-btn.wrong {
+  background: rgba(255,107,107,0.1); border-color: rgba(255,107,107,0.3); color: var(--text3);
+}
+.answer-btn.locked { pointer-events: none; }
+.answer-letter {
+  display: inline-block; width: 22px; height: 22px; border-radius: 5px;
+  background: var(--surface3); text-align: center; line-height: 22px;
+  font-size: 11px; font-weight: 700; margin-right: 10px;
+  color: var(--text2); font-family: 'Syne', sans-serif;
+}
+.correct .answer-letter { background: var(--green); color: #0a0a0f; }
+.wrong .answer-letter { background: var(--surface3); }
+
+/* Score bar */
+.score-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+.score-item { text-align: center; }
+.score-item .val {
+  font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px;
+  color: var(--accent);
+}
+.score-item .lbl { font-size: 10px; color: var(--text3); margin-top: 1px; text-transform: uppercase; letter-spacing: 0.06em; }
+.score-divider { width: 1px; height: 28px; background: var(--border); }
+
+/* Leaderboard */
+.leaderboard {
+  margin: 0 16px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.lb-header {
+  padding: 10px 14px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text3);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 6px;
+}
+.lb-row {
+  display: flex; align-items: center; padding: 10px 14px;
+  border-bottom: 1px solid var(--border); gap: 10px;
+  transition: background 0.3s;
+}
+.lb-row:last-child { border-bottom: none; }
+.lb-row.you { background: rgba(240,193,75,0.06); }
+.lb-rank {
+  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+  color: var(--text3); width: 18px; text-align: center;
+}
+.lb-rank.top { color: var(--accent); }
+.lb-crown { font-size: 14px; }
+.lb-name { flex: 1; font-size: 13px; font-weight: 500; color: var(--text); }
+.lb-name.you-name { color: var(--accent); }
+.lb-pts {
+  font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--text);
+}
+.lb-delta {
+  font-size: 11px; font-weight: 600; padding: 2px 5px; border-radius: 4px;
+  min-width: 28px; text-align: center;
+}
+.lb-delta.up { background: rgba(74,222,128,0.15); color: var(--green); }
+.lb-delta.down { background: rgba(255,107,107,0.1); color: var(--accent2); }
+
+/* Nudge card */
+.nudge-card {
+  margin: 0 16px 16px;
+  background: linear-gradient(135deg, rgba(167,139,250,0.12), rgba(96,165,250,0.08));
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: var(--radius); padding: 14px 16px;
+  display: none;
+}
+.nudge-card.visible { display: block; animation: slide-up 0.4s ease; }
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.nudge-from {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.nudge-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--purple); display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #fff; font-family: 'Syne', sans-serif;
+}
+.nudge-label { font-size: 11px; color: var(--purple); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+.nudge-msg { font-size: 14px; color: var(--text); line-height: 1.5; margin-bottom: 12px; }
+.nudge-actions { display: flex; gap: 8px; }
+.nudge-btn {
+  flex: 1; padding: 8px; border-radius: var(--radius-sm); border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+  transition: all 0.15s;
+}
+.nudge-btn.wave { background: var(--purple); color: #fff; }
+.nudge-btn.wave:hover { background: #9370f8; }
+.nudge-btn.dismiss { background: var(--surface3); color: var(--text2); }
+
+/* Promo card */
+.promo-card {
+  margin: 0 16px 16px;
+  background: linear-gradient(135deg, rgba(240,193,75,0.1), rgba(255,107,107,0.06));
+  border: 1px solid rgba(240,193,75,0.2);
+  border-radius: var(--radius); padding: 14px 16px;
+  display: none;
+}
+.promo-card.visible { display: block; animation: slide-up 0.4s ease 0.1s both; }
+.promo-eyebrow { font-size: 10px; font-weight: 700; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+.promo-msg { font-size: 14px; font-weight: 500; color: var(--text); }
+
+/* Staff signal btn */
+.signal-fab {
+  position: fixed; bottom: 80px; right: 20px;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--accent); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; box-shadow: 0 4px 20px rgba(240,193,75,0.35);
+  transition: transform 0.15s;
+  z-index: 50;
+}
+.signal-fab:hover { transform: scale(1.08); }
+.signal-fab:active { transform: scale(0.96); }
+
+/* Signal modal */
+.signal-modal {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+  background: var(--surface);
+  border-top: 1px solid var(--border2);
+  border-radius: 20px 20px 0 0;
+  padding: 20px;
+  transform: translateY(100%); transition: transform 0.3s ease;
+  max-width: 430px; margin: 0 auto;
+}
+.signal-modal.open { transform: translateY(0); }
+.modal-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 0 auto 16px; }
+.modal-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+.signal-options { display: flex; flex-direction: column; gap: 8px; }
+.signal-opt {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); cursor: pointer; transition: all 0.15s;
+}
+.signal-opt:hover { border-color: var(--accent); background: rgba(240,193,75,0.06); }
+.signal-opt-icon { font-size: 20px; }
+.signal-opt-text { font-size: 14px; font-weight: 500; }
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 190;
+  background: rgba(0,0,0,0.6); display: none;
+}
+.modal-overlay.open { display: block; }
+
+/* Vibe check */
+.vibe-modal {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+  background: var(--surface);
+  border-top: 1px solid var(--border2);
+  border-radius: 20px 20px 0 0;
+  padding: 24px 20px;
+  transform: translateY(100%); transition: transform 0.3s ease;
+  max-width: 430px; margin: 0 auto; text-align: center;
+}
+.vibe-modal.open { transform: translateY(0); }
+.vibe-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+.vibe-sub { font-size: 13px; color: var(--text2); margin-bottom: 20px; }
+.vibe-opts { display: flex; justify-content: center; gap: 12px; margin-bottom: 16px; }
+.vibe-opt {
+  font-size: 32px; cursor: pointer; transition: transform 0.15s;
+  width: 52px; height: 52px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; border: 1px solid transparent;
+}
+.vibe-opt:hover { transform: scale(1.2); border-color: var(--border2); background: var(--surface2); }
+.vibe-skip { font-size: 12px; color: var(--text3); cursor: pointer; }
+.vibe-skip:hover { color: var(--text2); }
+
+/* Bottom nav */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(10,10,15,0.96); backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  display: flex; height: 64px;
+  max-width: 430px; margin: 0 auto; z-index: 60;
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; background: none; border: none; cursor: pointer;
+  color: var(--text3); font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500;
+  transition: color 0.15s; position: relative;
+}
+.nav-btn.active { color: var(--accent); }
+.nav-icon { font-size: 20px; line-height: 1; }
+.nav-badge {
+  position: absolute; top: 8px; right: calc(50% - 16px);
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--accent2); color: #fff;
+  font-size: 9px; font-weight: 700; display: none;
+  align-items: center; justify-content: center;
+}
+.nav-badge.show { display: flex; }
+.guest-content { padding-bottom: 80px; }
+
+/* Intermission overlay */
+.intermission-banner {
+  margin: 0 16px 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 16px;
+  text-align: center; display: none;
+}
+.intermission-banner.visible { display: block; }
+.inter-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+.inter-sub { font-size: 13px; color: var(--text2); }
+
+/* Map view */
+.map-view-content {
+  padding: 16px;
+}
+.map-canvas {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  height: 340px; overflow: hidden; margin-bottom: 16px;
+}
+.map-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.table-node {
+  position: absolute; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  transition: transform 0.2s;
+}
+.table-node:hover { transform: scale(1.1); }
+.table-dot {
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700;
+  border: 2px solid transparent; transition: all 0.3s;
+}
+.table-dot.active { background: rgba(96,165,250,0.2); border-color: var(--blue); color: var(--blue); }
+.table-dot.you { background: rgba(240,193,75,0.2); border-color: var(--accent); color: var(--accent); }
+.table-dot.crown { background: rgba(240,193,75,0.25); border-color: var(--accent); color: var(--accent); }
+.table-dot.idle { background: rgba(90,90,122,0.2); border-color: var(--text3); color: var(--text3); }
+.table-label { font-size: 9px; color: var(--text2); white-space: nowrap; }
+.crown-icon { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 12px; }
+
+.map-legend {
+  display: flex; gap: 12px; flex-wrap: wrap;
+}
+.legend-item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--text2);
+}
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* Token view */
+.token-view-content { padding: 16px; }
+.token-balance {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+  text-align: center; margin-bottom: 16px;
+}
+.token-amount { font-family: 'Syne', sans-serif; font-size: 42px; font-weight: 800; color: var(--accent); }
+.token-sub { font-size: 13px; color: var(--text2); margin-top: 4px; }
+.token-received {
+  background: var(--surface);
+  border: 1px solid rgba(74,222,128,0.2);
+  border-radius: var(--radius); padding: 14px; margin-bottom: 16px;
+}
+.token-recv-label { font-size: 11px; font-weight: 600; color: var(--green); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+.token-recv-msg { font-size: 14px; color: var(--text); margin-bottom: 12px; }
+.flash-verify-btn {
+  width: 100%; padding: 12px; background: var(--green); color: #0a0a0f;
+  border: none; border-radius: var(--radius-sm); font-family: 'Syne', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity 0.15s;
+}
+.flash-verify-btn:hover { opacity: 0.9; }
+.send-token-section { }
+.send-label { font-size: 12px; color: var(--text2); margin-bottom: 10px; font-weight: 500; }
+.table-pick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.table-pick {
+  padding: 10px 8px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); cursor: pointer; text-align: center;
+  transition: all 0.15s; font-size: 12px; font-weight: 500; color: var(--text2);
+}
+.table-pick:hover, .table-pick.selected { border-color: var(--accent); color: var(--accent); background: rgba(240,193,75,0.06); }
+.amount-row { display: flex; gap: 8px; margin-bottom: 14px; }
+.amount-chip {
+  flex: 1; padding: 8px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); cursor: pointer; text-align: center;
+  font-size: 13px; font-weight: 600; color: var(--text2); transition: all 0.15s;
+}
+.amount-chip:hover, .amount-chip.selected { border-color: var(--accent); color: var(--accent); background: rgba(240,193,75,0.06); }
+.send-token-btn {
+  width: 100%; padding: 13px; background: var(--accent); color: #0a0a0f;
+  border: none; border-radius: var(--radius-sm); font-family: 'Syne', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity 0.15s;
+}
+.send-token-btn:hover { opacity: 0.9; }
+.send-token-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Flash overlay */
+.flash-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  display: none; align-items: center; justify-content: center;
+  flex-direction: column; gap: 20px;
+}
+.flash-overlay.open { display: flex; animation: flash-bg 0.5s ease; }
+.flash-pattern { font-size: 14px; text-align: center; color: #fff; }
+.flash-confirm { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: #fff; }
+.flash-sub { font-size: 13px; color: rgba(255,255,255,0.7); }
+
+/* ════════════════════════════════════════════
+   VENUE DASHBOARD VIEW
+════════════════════════════════════════════ */
+.dashboard-view {
+  background: var(--bg);
+  padding-bottom: 40px;
+}
+
+.dash-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.dash-venue { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
+.dash-meta { font-size: 13px; color: var(--text2); margin-top: 3px; }
+.dash-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  padding: 16px 24px; border-bottom: 1px solid var(--border);
+}
+@media (max-width: 640px) {
+  .dash-grid { grid-template-columns: repeat(2, 1fr); }
+}
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 14px;
+}
+.kpi-val { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 700; color: var(--text); }
+.kpi-val.green { color: var(--green); }
+.kpi-val.amber { color: var(--accent); }
+.kpi-val.red { color: var(--accent2); }
+.kpi-label { font-size: 11px; color: var(--text3); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
+.kpi-delta { font-size: 11px; margin-top: 4px; }
+.kpi-delta.up { color: var(--green); }
+.kpi-delta.dn { color: var(--accent2); }
+
+.dash-section { padding: 16px 24px; border-bottom: 1px solid var(--border); }
+.dash-section:last-child { border-bottom: none; }
+.section-title {
+  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--text2);
+  margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;
+}
+.section-action {
+  font-size: 11px; color: var(--accent); cursor: pointer; font-weight: 600;
+  text-transform: none; letter-spacing: 0; font-family: 'DM Sans', sans-serif;
+}
+
+/* Signal queue */
+.signal-queue { display: flex; flex-direction: column; gap: 8px; }
+.signal-item {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  transition: all 0.3s;
+}
+.signal-item.new { border-color: rgba(240,193,75,0.4); animation: signal-pulse 2s ease infinite; }
+@keyframes signal-pulse {
+  0%,100% { border-color: rgba(240,193,75,0.4); }
+  50% { border-color: rgba(240,193,75,0.8); }
+}
+.signal-table-badge {
+  background: var(--surface2); color: var(--text2);
+  font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+  padding: 4px 8px; border-radius: 5px; white-space: nowrap;
+}
+.signal-type { flex: 1; font-size: 13px; font-weight: 500; }
+.signal-time { font-size: 11px; color: var(--text3); }
+.signal-done {
+  padding: 5px 10px; background: var(--surface3); border: 1px solid var(--border2);
+  border-radius: 6px; font-size: 11px; font-weight: 600; color: var(--text2);
+  cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.signal-done:hover { background: var(--green); color: #0a0a0f; border-color: var(--green); }
+
+/* Vibe timeline */
+.vibe-timeline { display: flex; align-items: flex-end; gap: 6px; height: 60px; }
+.vibe-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.vibe-bar {
+  width: 100%; border-radius: 3px 3px 0 0;
+  transition: height 0.8s ease;
+}
+.vibe-bar-lbl { font-size: 9px; color: var(--text3); }
+
+/* Live map dashboard */
+.dash-map {
+  position: relative; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  height: 260px; overflow: hidden;
+}
+.dash-table-node {
+  position: absolute; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.dash-table-dot {
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700;
+  border: 1px solid transparent; transition: all 0.4s;
+  position: relative;
+}
+.dash-table-dot.active { background: rgba(96,165,250,0.15); border-color: var(--blue); color: var(--blue); }
+.dash-table-dot.hot { background: rgba(240,193,75,0.2); border-color: var(--accent); color: var(--accent); }
+.dash-table-dot.flagged { background: rgba(255,107,107,0.15); border-color: var(--accent2); color: var(--accent2); animation: flag-pulse 1.5s ease infinite; }
+.dash-table-dot.idle { background: rgba(90,90,122,0.1); border-color: var(--surface3); color: var(--text3); }
+@keyframes flag-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(255,107,107,0.3); }
+  50% { box-shadow: 0 0 0 6px rgba(255,107,107,0); }
+}
+.dash-table-label { font-size: 9px; color: var(--text2); white-space: nowrap; }
+.dash-dwell { font-size: 8px; color: var(--text3); }
+
+/* Broadcast */
+.broadcast-area { display: flex; gap: 8px; }
+.broadcast-input {
+  flex: 1; background: var(--surface); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); padding: 10px 14px;
+  color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px;
+  outline: none;
+}
+.broadcast-input:focus { border-color: var(--accent); }
+.broadcast-btn {
+  padding: 10px 16px; background: var(--accent); color: #0a0a0f;
+  border: none; border-radius: var(--radius-sm);
+  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+  cursor: pointer; white-space: nowrap;
+}
+
+/* Broadcast overlay (guest) */
+.broadcast-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,0.8); display: none;
+  align-items: center; justify-content: center; padding: 24px;
+}
+.broadcast-overlay.show { display: flex; }
+.broadcast-msg-card {
+  background: var(--surface); border: 1px solid var(--accent);
+  border-radius: var(--radius); padding: 28px 24px; text-align: center;
+  max-width: 320px; width: 100%; animation: slide-up 0.3s ease;
+}
+.bc-eyebrow { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+.bc-msg { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 16px; }
+.bc-dismiss {
+  padding: 10px 24px; background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); color: var(--text2); cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; border: none;
+}
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--surface3); border: 1px solid var(--border2);
+  border-radius: 20px; padding: 10px 18px;
+  font-size: 13px; font-weight: 500; color: var(--text);
+  opacity: 0; transition: all 0.3s; z-index: 500; white-space: nowrap;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Dwell chart */
+.dwell-chart { height: 80px; display: flex; align-items: flex-end; gap: 4px; }
+.dwell-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.dwell-bar { width: 100%; background: var(--blue); border-radius: 2px 2px 0 0; opacity: 0.7; }
+.dwell-bar-lbl { font-size: 8px; color: var(--text3); }
+
+/* Kill switch */
+.kill-row {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 14px;
+  margin-bottom: 8px;
+}
+.kill-row:last-child { margin-bottom: 0; }
+.kill-tname { flex: 1; font-size: 13px; font-weight: 500; }
+.kill-btn {
+  padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: 600;
+  cursor: pointer; border: none; transition: all 0.15s;
+}
+.kill-btn.clear { background: var(--surface3); color: var(--text2); }
+.kill-btn.clear:hover { background: var(--accent); color: #0a0a0f; }
+.kill-btn.ban { background: rgba(255,107,107,0.1); color: var(--accent2); border: 1px solid rgba(255,107,107,0.2); }
+.kill-btn.ban:hover { background: var(--accent2); color: #fff; }
+
+/* ════════════════════════════════════════════
+   STAFF VIEW
+════════════════════════════════════════════ */
+.staff-view {
+  max-width: 500px; margin: 0 auto;
+  background: var(--bg); padding-bottom: 40px;
+}
+.staff-header {
+  padding: 18px 20px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.staff-title { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; }
+.staff-shift { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.staff-status-pill {
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(74,222,128,0.1); color: var(--green);
+  border: 1px solid rgba(74,222,128,0.2);
+  border-radius: 20px; padding: 5px 10px;
+  font-size: 12px; font-weight: 600;
+}
+
+/* Staff quick stats */
+.staff-stats {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 10px;
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+}
+.staff-stat {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 10px; text-align: center;
+}
+.staff-stat-val {
+  font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700;
+}
+.staff-stat-val.urgent { color: var(--accent2); }
+.staff-stat-val.ok { color: var(--green); }
+.staff-stat-val.amber { color: var(--accent); }
+.staff-stat-lbl { font-size: 10px; color: var(--text3); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* Staff section */
+.staff-section {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.staff-section:last-child { border-bottom: none; }
+.staff-section-title {
+  font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3);
+  margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;
+}
+.staff-section-count {
+  background: var(--accent2); color: #fff;
+  font-size: 10px; font-weight: 700; padding: 2px 6px;
+  border-radius: 10px; font-family: 'DM Sans', sans-serif;
+  text-transform: none; letter-spacing: 0;
+}
+.staff-section-count.clear { background: var(--surface3); color: var(--text2); }
+
+/* Signal items — staff view */
+.staff-signal-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  margin-bottom: 8px; transition: all 0.3s;
+}
+.staff-signal-item:last-child { margin-bottom: 0; }
+.staff-signal-item.urgent { border-color: rgba(255,107,107,0.4); }
+.staff-signal-item.new { border-color: rgba(240,193,75,0.35); animation: signal-pulse 2s ease infinite; }
+.staff-table-badge {
+  font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800;
+  color: var(--accent); min-width: 36px;
+}
+.staff-signal-body { flex: 1; }
+.staff-signal-type { font-size: 13px; font-weight: 500; color: var(--text); }
+.staff-signal-age { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.staff-signal-age.urgent { color: var(--accent2); }
+.staff-done-btn {
+  padding: 7px 14px; background: var(--surface3); border: 1px solid var(--border2);
+  border-radius: 6px; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+  color: var(--text2); cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.staff-done-btn:hover { background: var(--green); color: #0a0a0f; border-color: var(--green); }
+
+/* Token redemption items */
+.token-redeem-item {
+  background: var(--surface);
+  border: 1px solid rgba(74,222,128,0.2);
+  border-radius: var(--radius-sm); padding: 14px;
+  margin-bottom: 8px;
+}
+.token-redeem-item:last-child { margin-bottom: 0; }
+.token-redeem-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;
+}
+.token-from { font-size: 13px; font-weight: 600; color: var(--text); }
+.token-amount-badge {
+  font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800;
+  color: var(--green);
+}
+.token-expiry { font-size: 11px; color: var(--text3); margin-bottom: 10px; }
+.token-expiry.soon { color: var(--accent); }
+.redeem-btn {
+  width: 100%; padding: 9px; background: rgba(74,222,128,0.12);
+  border: 1px solid rgba(74,222,128,0.3); border-radius: var(--radius-sm);
+  color: var(--green); font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s;
+}
+.redeem-btn:hover { background: var(--green); color: #0a0a0f; }
+
+/* Vibe snapshot */
+.vibe-snapshot {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.vibe-table-chip {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 8px 10px;
+  font-size: 12px; font-weight: 500;
+}
+.vibe-table-chip.flagged { border-color: rgba(255,107,107,0.4); background: rgba(255,107,107,0.05); }
+.vibe-table-chip.great { border-color: rgba(74,222,128,0.3); background: rgba(74,222,128,0.05); }
+.vibe-score { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; }
+.vibe-score.low { color: var(--accent2); }
+.vibe-score.mid { color: var(--accent); }
+.vibe-score.high { color: var(--green); }
+.vibe-table-num { color: var(--text2); }
+
+/* Flash verify — staff side */
+.staff-flash-btn {
+  width: 100%; padding: 12px; background: var(--green); color: #0a0a0f;
+  border: none; border-radius: var(--radius-sm); font-family: 'Syne', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity 0.15s;
+  margin-top: 8px;
+}
+.staff-flash-btn:hover { opacity: 0.9; }
+
+/* Empty state */
+.empty-state {
+  text-align: center; padding: 20px;
+  font-size: 13px; color: var(--text3);
+}
+
+/* ── AI VIBE SUGGESTION SYSTEM ── */
+.ai-suggestion-context {
+  font-size: 12px; color: var(--text2); line-height: 1.6;
+  background: var(--surface2); border-radius: var(--radius-sm);
+  padding: 10px 12px; margin-bottom: 12px;
+  border-left: 3px solid var(--purple);
+}
+.ai-suggestion-item {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px; margin-bottom: 8px;
+  cursor: pointer; transition: all 0.18s;
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.ai-suggestion-item:last-child { margin-bottom: 0; }
+.ai-suggestion-item:hover { border-color: var(--purple); background: rgba(167,139,250,0.06); }
+.ai-suggestion-item.urgent-sug { border-color: rgba(255,107,107,0.3); }
+.ai-suggestion-item.urgent-sug:hover { border-color: var(--accent2); background: rgba(255,107,107,0.06); }
+.ai-suggestion-item.positive-sug { border-color: rgba(74,222,128,0.2); }
+.ai-suggestion-item.positive-sug:hover { border-color: var(--green); background: rgba(74,222,128,0.06); }
+.sug-icon { font-size: 20px; margin-top: 1px; flex-shrink: 0; }
+.sug-body { flex: 1; }
+.sug-label {
+  font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px;
+}
+.sug-desc { font-size: 12px; color: var(--text2); line-height: 1.4; }
+.sug-cta {
+  font-size: 11px; font-weight: 700; color: var(--purple);
+  margin-top: 6px; text-transform: uppercase; letter-spacing: 0.06em;
+}
+.sug-cta.red { color: var(--accent2); }
+.sug-cta.green { color: var(--green); }
+
+/* Action modal body */
+.action-field-label {
+  font-size: 11px; font-weight: 600; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; margin-top: 14px;
+}
+.action-field-label:first-child { margin-top: 0; }
+.action-input {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); padding: 10px 12px;
+  color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px;
+  outline: none; resize: none;
+}
+.action-input:focus { border-color: var(--purple); }
+.action-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+.action-chip {
+  padding: 6px 12px; background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 20px; font-size: 12px; font-weight: 500; color: var(--text2);
+  cursor: pointer; transition: all 0.15s;
+}
+.action-chip:hover, .action-chip.sel { background: rgba(167,139,250,0.15); border-color: var(--purple); color: var(--purple); }
+.action-chip.sel-green { background: rgba(74,222,128,0.12); border-color: var(--green); color: var(--green); }
+.action-send-btn {
+  width: 100%; padding: 13px; margin-top: 16px;
+  background: var(--purple); color: #fff; border: none;
+  border-radius: var(--radius-sm); font-family: 'Syne', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity 0.15s;
+}
+.action-send-btn:hover { opacity: 0.88; }
+.action-send-btn.green-btn { background: var(--green); color: #0a0a0f; }
+.action-send-btn.amber-btn { background: var(--accent); color: #0a0a0f; }
+
+/* Guest vibe-lift notification card */
+.vibe-lift-card {
+  margin: 0 16px 16px;
+  border-radius: var(--radius); padding: 14px 16px;
+  display: none; animation: slide-up 0.4s ease;
+}
+.vibe-lift-card.visible { display: block; }
+.vibe-lift-card.note-card {
+  background: linear-gradient(135deg, rgba(167,139,250,0.12), rgba(96,165,250,0.08));
+  border: 1px solid rgba(167,139,250,0.3);
+}
+.vibe-lift-card.promo-card-targeted {
+  background: linear-gradient(135deg, rgba(240,193,75,0.12), rgba(255,107,107,0.06));
+  border: 1px solid rgba(240,193,75,0.25);
+}
+.vibe-lift-card.comp-card {
+  background: linear-gradient(135deg, rgba(74,222,128,0.1), rgba(96,165,250,0.06));
+  border: 1px solid rgba(74,222,128,0.25);
+}
+.vibe-lift-card.bounty-card {
+  background: linear-gradient(135deg, rgba(240,193,75,0.15), rgba(167,139,250,0.08));
+  border: 1px solid rgba(240,193,75,0.3);
+}
+.vlc-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+.vlc-msg { font-size: 14px; color: var(--text); line-height: 1.5; }
+.vlc-dismiss {
+  margin-top: 10px; font-size: 12px; color: var(--text3); cursor: pointer;
+  display: inline-block;
+}
+.vlc-dismiss:hover { color: var(--text2); }
+
+.table-dot.bar-rail {
+  background: rgba(250,100,100,0.18);
+  border-color: #f87171; color: #f87171;
+  border-radius: 8px !important;
+}
+.table-dot.roaming {
+  background: rgba(52,211,153,0.15);
+  border-color: #34d399; color: #34d399;
+  border-style: dashed;
+}
+.dash-table-dot.bar-rail {
+  background: rgba(250,100,100,0.18);
+  border-color: #f87171; color: #f87171;
+  border-radius: 8px !important;
+}
+.dash-table-dot.roaming {
+  background: rgba(52,211,153,0.15);
+  border-color: #34d399; color: #34d399;
+  border-style: dashed;
+}
+.bar-rail-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(248,113,113,0.12); color: #f87171;
+  border: 1px solid rgba(248,113,113,0.25);
+  border-radius: 6px; padding: 2px 8px;
+  font-size: 11px; font-weight: 600;
+}
+.roaming-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(52,211,153,0.1); color: #34d399;
+  border: 1px solid rgba(52,211,153,0.25);
+  border-radius: 6px; padding: 2px 8px;
+  font-size: 11px; font-weight: 600; border-style: dashed;
+}
+.session-type-bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 8px 20px; background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px; color: var(--text3);
+}
+.bar-rail-info {
+  background: var(--surface); border: 1px solid rgba(248,113,113,0.2);
+  border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px;
+}
+.bar-rail-count {
+  font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: #f87171;
+}
+.roaming-count {
+  font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: #34d399;
+}
+
+/* ── EXIT & TABLE TURN ── */
+.nav-btn.exit-btn { color: var(--accent2); }
+.nav-btn.exit-btn:hover { color: #ff4444; }
+
+.exit-modal-body { padding: 4px 0 8px; }
+.exit-warning {
+  background: rgba(255,107,107,0.08); border: 1px solid rgba(255,107,107,0.2);
+  border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px;
+  font-size: 13px; color: var(--text2); line-height: 1.6;
+}
+.exit-survey-q { margin-bottom: 14px; }
+.exit-survey-q .qlabel { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+.exit-stars { display: flex; gap: 8px; }
+.exit-star {
+  font-size: 26px; cursor: pointer; transition: transform 0.12s;
+  opacity: 0.35; filter: grayscale(1);
+}
+.exit-star:hover, .exit-star.lit { opacity: 1; filter: none; transform: scale(1.15); }
+.exit-reasons { display: flex; flex-wrap: wrap; gap: 6px; }
+.exit-reason {
+  padding: 6px 12px; background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 20px; font-size: 12px; font-weight: 500; color: var(--text2);
+  cursor: pointer; transition: all 0.15s;
+}
+.exit-reason.sel { background: rgba(96,165,250,0.12); border-color: var(--blue); color: var(--blue); }
+.exit-confirm-btn {
+  width: 100%; padding: 13px; background: var(--accent2); color: #fff;
+  border: none; border-radius: var(--radius-sm); font-family: 'Syne', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 16px;
+  transition: opacity 0.15s;
+}
+.exit-confirm-btn:hover { opacity: 0.88; }
+.exit-stay-btn {
+  width: 100%; padding: 11px; background: transparent; color: var(--text2);
+  border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer;
+  margin-top: 8px; transition: all 0.15s;
+}
+.exit-stay-btn:hover { border-color: var(--green); color: var(--green); }
+
+/* Goodbye screen */
+.goodbye-screen {
+  position: fixed; inset: 0; z-index: 500;
+  background: var(--bg); display: none;
+  flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 32px;
+}
+.goodbye-screen.show { display: flex; }
+.goodbye-logo { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; color: var(--accent); margin-bottom: 8px; }
+.goodbye-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+.goodbye-sub { font-size: 14px; color: var(--text2); line-height: 1.6; max-width: 280px; }
+.goodbye-stats {
+  display: flex; gap: 24px; margin: 28px 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 24px;
+}
+.goodbye-stat { text-align: center; }
+.goodbye-stat-val { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 700; color: var(--accent); }
+.goodbye-stat-lbl { font-size: 11px; color: var(--text3); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+.goodbye-rejoin {
+  padding: 12px 28px; background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); color: var(--text2); cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; margin-top: 8px;
+}
+
+/* Table turn — staff */
+.table-turn-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.turn-table-btn {
+  padding: 12px 8px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); cursor: pointer; text-align: center;
+  transition: all 0.15s; font-size: 12px; font-weight: 600;
+  color: var(--text2); font-family: 'Syne', sans-serif;
+}
+.turn-table-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(240,193,75,0.06); }
+.turn-table-btn .tt-status { font-size: 9px; font-weight: 400; color: var(--text3); display: block; margin-top: 3px; font-family: 'DM Sans', sans-serif; }
+.turn-table-btn.sel-turn { border-color: var(--accent); color: var(--accent); background: rgba(240,193,75,0.08); }
+
+.turn-confirm-btn {
+  width: 100%; padding: 12px; background: var(--accent); color: #0a0a0f;
+  border: none; border-radius: var(--radius-sm); font-family: 'Syne', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 14px;
+  transition: opacity 0.15s;
+}
+.turn-confirm-btn:hover { opacity: 0.88; }
+.turn-confirm-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ── DEMO HINT ── */
+.demo-hint {
+  position: fixed; bottom: 140px; left: 50%; transform: translateX(-50%);
+  background: rgba(30,30,50,0.95); border: 1px solid var(--border2);
+  border-radius: 20px; padding: 8px 16px;
+  font-size: 12px; color: var(--text2); white-space: nowrap; z-index: 40;
+  animation: hint-fade 4s ease 2s forwards;
+  pointer-events: none;
+}
+@keyframes hint-fade {
+  0% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="top-nav">
+  <div class="logo">Barplay <span>demo</span></div>
+  <div class="view-toggle">
+    <button class="view-btn active" onclick="switchView('guest')">Guest</button>
+    <button class="view-btn" onclick="switchView('staff')">Staff</button>
+    <button class="view-btn" onclick="switchView('dashboard')">Manager</button>
+  </div>
+  <div class="live-badge"><div class="live-dot"></div>Live</div>
+</nav>
+
+<!-- ══════════════════════════════════
+     GUEST VIEW
+══════════════════════════════════ -->
+<div id="guest-view" class="view active guest-view">
+
+  <div class="venue-header">
+    <div class="venue-name">The Bitter End</div>
+    <div class="venue-meta">
+      <span class="table-chip">Table 7</span>
+      <span>Portland, OR</span>
+      <span>·</span>
+      <span id="active-count">12 active tables</span>
+    </div>
+  </div>
+  <div class="session-type-bar">
+    <span>Tonight:</span>
+    <span class="bar-rail-badge">🍺 Bar Rail · 8 players</span>
+    <span class="roaming-badge">🚶 Team Alex · 3 players</span>
+    <span style="margin-left:auto;color:var(--text3)">23 total active</span>
+  </div>
+
+  <!-- Game section (shown during game) -->
+  <div id="game-section" class="guest-content">
+
+    <!-- Game card -->
+    <div class="game-card">
+      <div class="game-phase-bar">
+        <span class="phase-label active" id="phase-label">Game Phase</span>
+        <span class="round-timer" id="round-timer">7:32</span>
+      </div>
+      <div class="timer-track">
+        <div class="timer-fill" id="timer-fill" style="width:75%"></div>
+      </div>
+
+      <!-- Question area -->
+      <div class="question-area" id="question-area">
+        <div class="mode-chip">🎯 Trivia</div>
+        <div class="question-text" id="question-text">Which decade saw the rise of grunge music?</div>
+        <div class="answers-grid" id="answers-grid">
+          <button class="answer-btn" onclick="selectAnswer(this, false)"><span class="answer-letter">A</span>1970s</button>
+          <button class="answer-btn" onclick="selectAnswer(this, false)"><span class="answer-letter">B</span>1980s</button>
+          <button class="answer-btn" onclick="selectAnswer(this, true)"><span class="answer-letter">C</span>1990s</button>
+          <button class="answer-btn" onclick="selectAnswer(this, false)"><span class="answer-letter">D</span>2000s</button>
+        </div>
+      </div>
+
+      <!-- Score bar -->
+      <div class="score-bar">
+        <div class="score-item">
+          <div class="val" id="my-score">340</div>
+          <div class="lbl">Your pts</div>
+        </div>
+        <div class="score-divider"></div>
+        <div class="score-item">
+          <div class="val" style="color:var(--text2)" id="q-num">Q 4/10</div>
+          <div class="lbl">Question</div>
+        </div>
+        <div class="score-divider"></div>
+        <div class="score-item">
+          <div class="val" style="color:var(--text2)" id="my-rank">#3</div>
+          <div class="lbl">Rank</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Intermission banner (hidden initially) -->
+    <div class="intermission-banner" id="intermission-banner">
+      <div class="inter-title">⏸ Intermission</div>
+      <div class="inter-sub">Next round in <span id="inter-countdown">4:12</span></div>
+    </div>
+
+    <!-- Vibe lift cards (pushed from staff) -->
+    <div class="vibe-lift-card note-card" id="vlc-note">
+      <div class="vlc-eyebrow" style="color:var(--purple)">💬 From your server</div>
+      <div class="vlc-msg" id="vlc-note-msg">Hey Table 9 — hope you're enjoying the night! Let me know if there's anything I can do to make it better.</div>
+      <div class="vlc-dismiss" onclick="this.parentElement.classList.remove('visible')">Dismiss</div>
+    </div>
+    <div class="vibe-lift-card promo-card-targeted" id="vlc-promo">
+      <div class="vlc-eyebrow" style="color:var(--accent)">🍺 Just for your table</div>
+      <div class="vlc-msg" id="vlc-promo-msg">Next round of drinks — 25% off. Your server will be right over.</div>
+      <div class="vlc-dismiss" onclick="this.parentElement.classList.remove('visible')">Dismiss</div>
+    </div>
+    <div class="vibe-lift-card comp-card" id="vlc-comp">
+      <div class="vlc-eyebrow" style="color:var(--green)">🎁 On the house</div>
+      <div class="vlc-msg" id="vlc-comp-msg">A round of nachos is headed your way — compliments of The Bitter End. Enjoy! 🙌</div>
+      <div class="vlc-dismiss" onclick="this.parentElement.classList.remove('visible')">Dismiss</div>
+    </div>
+    <div class="vibe-lift-card bounty-card" id="vlc-bounty">
+      <div class="vlc-eyebrow" style="color:var(--accent)">⚡ Bounty activated!</div>
+      <div class="vlc-msg" id="vlc-bounty-msg">A Bounty is on Table 9 — beat them this round and your points DOUBLE. Game on. 👑</div>
+      <div class="vlc-dismiss" onclick="this.parentElement.classList.remove('visible')">Dismiss</div>
+    </div>
+    <div class="nudge-card" id="nudge-card">
+      <div class="nudge-from">
+        <div class="nudge-avatar">T3</div>
+        <span class="nudge-label">AI Wingman — Table 3</span>
+      </div>
+      <div class="nudge-msg" id="nudge-msg">Table 3 also thinks the 90s was the best decade. Ask them: Nirvana or Pearl Jam?</div>
+      <div class="nudge-actions">
+        <button class="nudge-btn wave" onclick="waveBack()">👋 Wave back</button>
+        <button class="nudge-btn dismiss" onclick="dismissNudge()">Dismiss</button>
+      </div>
+    </div>
+
+    <!-- Promo card -->
+    <div class="promo-card" id="promo-card">
+      <div class="promo-eyebrow">🍺 Promo Pulse</div>
+      <div class="promo-msg">Half-price happy hour shots — next 20 minutes only. Ask your server!</div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div class="leaderboard">
+      <div class="lb-header">👑 Leaderboard</div>
+      <div class="lb-row" id="lb-1">
+        <div class="lb-rank top">1</div>
+        <div class="lb-crown">👑</div>
+        <div class="lb-name">Table 11</div>
+        <div class="lb-pts" id="lb1-pts">520</div>
+        <div class="lb-delta up">+80</div>
+      </div>
+      <div class="lb-row" id="lb-2">
+        <div class="lb-rank top">2</div>
+        <div class="lb-crown" style="opacity:0">·</div>
+        <div class="lb-name">Table 4</div>
+        <div class="lb-pts" id="lb2-pts">490</div>
+        <div class="lb-delta up">+60</div>
+      </div>
+      <div class="lb-row you" id="lb-3">
+        <div class="lb-rank top">3</div>
+        <div class="lb-crown" style="opacity:0">·</div>
+        <div class="lb-name you-name">You (Table 7)</div>
+        <div class="lb-pts" id="lb3-pts">340</div>
+        <div class="lb-delta up">+40</div>
+      </div>
+      <div class="lb-row" id="lb-4">
+        <div class="lb-rank">4</div>
+        <div class="lb-crown" style="opacity:0">·</div>
+        <div class="lb-name">Table 2</div>
+        <div class="lb-pts" id="lb4-pts">290</div>
+        <div class="lb-delta down">-10</div>
+      </div>
+      <div class="lb-row" id="lb-5">
+        <div class="lb-rank">5</div>
+        <div class="lb-crown" style="opacity:0">·</div>
+        <div class="lb-name">Table 9</div>
+        <div class="lb-pts" id="lb5-pts">210</div>
+        <div class="lb-delta down">-20</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MAP TAB CONTENT -->
+  <div id="map-section" class="guest-content" style="display:none">
+    <div class="map-view-content">
+      <div class="map-canvas">
+        <div class="map-grid"></div>
+        <!-- Table nodes positioned on map -->
+        <div class="table-node" style="left:18%;top:15%" onclick="showNudgePrompt('Table 11')">
+          <div class="table-dot crown" style="width:46px;height:46px" id="map-t11">
+            <span class="crown-icon">👑</span>11
+          </div>
+          <div class="table-label">520 pts</div>
+        </div>
+        <div class="table-node" style="left:55%;top:12%" onclick="showNudgePrompt('Table 4')">
+          <div class="table-dot active" style="width:40px;height:40px">4</div>
+          <div class="table-label">490 pts</div>
+        </div>
+        <div class="table-node" style="left:38%;top:42%">
+          <div class="table-dot you" style="width:44px;height:44px">7</div>
+          <div class="table-label" style="color:var(--accent)">You</div>
+        </div>
+        <div class="table-node" style="left:72%;top:38%" onclick="showNudgePrompt('Table 2')">
+          <div class="table-dot active" style="width:36px;height:36px">2</div>
+          <div class="table-label">290 pts</div>
+        </div>
+        <div class="table-node" style="left:15%;top:58%" onclick="showNudgePrompt('Table 9')">
+          <div class="table-dot active" style="width:34px;height:34px">9</div>
+          <div class="table-label">210 pts</div>
+        </div>
+        <div class="table-node" style="left:62%;top:62%" onclick="showNudgePrompt('Table 6')">
+          <div class="table-dot active" style="width:32px;height:32px">6</div>
+          <div class="table-label">180 pts</div>
+        </div>
+        <div class="table-node" style="left:82%;top:68%" onclick="showNudgePrompt('Table 14')">
+          <div class="table-dot idle" style="width:28px;height:28px">14</div>
+          <div class="table-label">idle</div>
+        </div>
+        <div class="table-node" style="left:30%;top:72%" onclick="showNudgePrompt('Table 3')">
+          <div class="table-dot active" style="width:38px;height:38px">3</div>
+          <div class="table-label">shared 🔗</div>
+        </div>
+        <!-- Bar Rail node — fixed QR at the bar counter -->
+        <div class="table-node" style="left:50%;top:88%" onclick="showNudgePrompt('Bar Rail')">
+          <div class="table-dot bar-rail" style="width:52px;height:30px;border-radius:8px;font-size:9px;font-weight:700;letter-spacing:0.03em">BAR</div>
+          <div class="table-label" style="color:#f87171">8 players · 480pts</div>
+        </div>
+        <!-- Roaming node — server lanyard QR -->
+        <div class="table-node" style="left:84%;top:48%" onclick="showNudgePrompt('Team Alex')">
+          <div class="table-dot roaming" style="width:40px;height:40px;font-size:9px;font-weight:700">ALEX</div>
+          <div class="table-label" style="color:#34d399">3 roaming</div>
+        </div>
+      </div>
+      <div class="map-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>You</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Crown</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Active</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--text3)"></div>Idle</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div>Bar Rail</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#34d399;border:1px dashed #34d399"></div>Roaming</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOKEN TAB CONTENT -->
+  <div id="token-section" class="guest-content" style="display:none">
+    <div class="token-view-content">
+      <div class="token-received">
+        <div class="token-recv-label">🎁 Token received!</div>
+        <div class="token-recv-msg">Table 11 sent you a $10 drink token. Expires in 47 minutes.</div>
+        <button class="flash-verify-btn" onclick="showFlashVerify()">Show Flash-Verify to bartender</button>
+      </div>
+      <div class="token-balance" style="margin-bottom:16px">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:4px">SEND A TOKEN</div>
+        <div style="font-size:13px;color:var(--text2)">Buy someone at another table a drink</div>
+      </div>
+      <div class="send-token-section">
+        <div class="send-label">Choose a table</div>
+        <div class="table-pick-grid">
+          <div class="table-pick" onclick="pickTable(this,'Table 2')">Table 2</div>
+          <div class="table-pick" onclick="pickTable(this,'Table 3')">Table 3</div>
+          <div class="table-pick" onclick="pickTable(this,'Table 4')">Table 4</div>
+          <div class="table-pick" onclick="pickTable(this,'Table 6')">Table 6</div>
+          <div class="table-pick" onclick="pickTable(this,'Table 9')">Table 9</div>
+          <div class="table-pick" onclick="pickTable(this,'Table 11')">Table 11 👑</div>
+        </div>
+        <div class="send-label">Amount</div>
+        <div class="amount-row">
+          <div class="amount-chip" onclick="pickAmount(this,'$5')">$5</div>
+          <div class="amount-chip" onclick="pickAmount(this,'$10')">$10</div>
+          <div class="amount-chip" onclick="pickAmount(this,'$15')">$15</div>
+          <div class="amount-chip" onclick="pickAmount(this,'$20')">$20</div>
+        </div>
+        <button class="send-token-btn" id="send-token-btn" disabled onclick="sendToken()">Send Token via Apple Pay</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-game" onclick="switchTab('game')">
+      <span class="nav-icon">🎮</span>Game
+    </button>
+    <button class="nav-btn" id="nav-map" onclick="switchTab('map')">
+      <span class="nav-icon">🗺️</span>Map
+    </button>
+    <button class="nav-btn" id="nav-signal" onclick="openSignal()">
+      <span class="nav-icon">🚩</span>Signal
+      <div class="nav-badge" id="signal-badge"></div>
+    </button>
+    <button class="nav-btn" id="nav-token" onclick="switchTab('token')">
+      <span class="nav-icon">🎁</span>Tokens
+      <div class="nav-badge show" id="token-badge">1</div>
+    </button>
+    <button class="nav-btn exit-btn" onclick="openExitFlow()">
+      <span class="nav-icon">👋</span>Leave
+    </button>
+  </nav>
+
+  <!-- FAB (only map/game) -->
+  <button class="signal-fab" onclick="openSignal()" title="Staff Signal">🚩</button>
+
+  <!-- Exit modal -->
+  <div class="modal-overlay" id="exit-overlay" onclick="closeExitFlow()"></div>
+  <div class="signal-modal" id="exit-modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Leaving already? 👋</div>
+    <div class="exit-modal-body">
+      <div class="exit-warning">Your session will end and your scores will be saved. The table will reset for the next group.</div>
+      <div class="exit-survey-q">
+        <div class="qlabel">How was your night?</div>
+        <div class="exit-stars">
+          <span class="exit-star" onclick="rateExit(1)">⭐</span>
+          <span class="exit-star" onclick="rateExit(2)">⭐</span>
+          <span class="exit-star" onclick="rateExit(3)">⭐</span>
+          <span class="exit-star" onclick="rateExit(4)">⭐</span>
+          <span class="exit-star" onclick="rateExit(5)">⭐</span>
+        </div>
+      </div>
+      <div class="exit-survey-q">
+        <div class="qlabel">What brought you in?</div>
+        <div class="exit-reasons">
+          <div class="exit-reason" onclick="toggleReason(this)">Just passing by</div>
+          <div class="exit-reason" onclick="toggleReason(this)">Regular here</div>
+          <div class="exit-reason" onclick="toggleReason(this)">Heard about Barplay</div>
+          <div class="exit-reason" onclick="toggleReason(this)">Special occasion</div>
+          <div class="exit-reason" onclick="toggleReason(this)">Live music</div>
+          <div class="exit-reason" onclick="toggleReason(this)">With friends</div>
+        </div>
+      </div>
+      <button class="exit-confirm-btn" onclick="confirmExit()">End session &amp; leave</button>
+      <button class="exit-stay-btn" onclick="closeExitFlow()">Actually, I'll stay 🍺</button>
+    </div>
+  </div>
+
+  <div class="demo-hint">Tap answers, explore tabs, try the map</div>
+</div>
+
+<!-- Goodbye screen (outside guest view so it overlays everything) -->
+<div class="goodbye-screen" id="goodbye-screen">
+  <div class="goodbye-logo">Barplay</div>
+  <div class="goodbye-title">Thanks for playing! 🎉</div>
+  <div class="goodbye-sub">Hope you had a great night at The Bitter End. See you next time.</div>
+  <div class="goodbye-stats">
+    <div class="goodbye-stat">
+      <div class="goodbye-stat-val" id="gb-score">340</div>
+      <div class="goodbye-stat-lbl">Final score</div>
+    </div>
+    <div class="goodbye-stat">
+      <div class="goodbye-stat-val">#3</div>
+      <div class="goodbye-stat-lbl">Final rank</div>
+    </div>
+    <div class="goodbye-stat">
+      <div class="goodbye-stat-val" id="gb-time">51m</div>
+      <div class="goodbye-stat-lbl">Time played</div>
+    </div>
+  </div>
+  <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Scan the QR code to start a new session</div>
+  <button class="goodbye-rejoin" onclick="rejoinSession()">↩ Rejoin this session (demo)</button>
+</div>
+
+<!-- ══════════════════════════════════
+     VENUE DASHBOARD VIEW
+══════════════════════════════════ -->
+<!-- ══════════════════════════════════
+     STAFF VIEW
+══════════════════════════════════ -->
+<div id="staff-view" class="view staff-view">
+
+  <div class="staff-header">
+    <div>
+      <div class="staff-title">The Bitter End — Staff</div>
+      <div class="staff-shift">Friday night · Shift started 8:00pm</div>
+    </div>
+    <div class="staff-status-pill"><div class="live-dot"></div>On floor</div>
+  </div>
+
+  <div class="staff-stats">
+    <div class="staff-stat">
+      <div class="staff-stat-val urgent" id="s-open-signals">3</div>
+      <div class="staff-stat-lbl">Open signals</div>
+    </div>
+    <div class="staff-stat">
+      <div class="staff-stat-val amber" id="s-tokens">2</div>
+      <div class="staff-stat-lbl">Tokens pending</div>
+    </div>
+    <div class="staff-stat">
+      <div class="staff-stat-val ok" id="s-resolved">7</div>
+      <div class="staff-stat-lbl">Resolved tonight</div>
+    </div>
+  </div>
+
+  <!-- Bar Rail + Roaming summary -->
+  <div class="staff-section">
+    <div class="staff-section-title">Non-Table Sessions</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="bar-rail-info">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          <span style="font-size:14px">🍺</span>
+          <span style="font-size:11px;font-weight:700;color:#f87171;text-transform:uppercase;letter-spacing:0.06em">Bar Rail</span>
+        </div>
+        <div class="bar-rail-count" id="bar-rail-count">8</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">players at bar</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:8px;line-height:1.4">Fixed QR on bar counter. Shared session, competing as a group.</div>
+      </div>
+      <div class="bar-rail-info" style="border-color:rgba(52,211,153,0.2)">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          <span style="font-size:14px">🚶</span>
+          <span style="font-size:11px;font-weight:700;color:#34d399;text-transform:uppercase;letter-spacing:0.06em">Team Alex</span>
+        </div>
+        <div class="roaming-count" id="roaming-count">3</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">scanned your QR</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:8px;line-height:1.4">Your lanyard QR. Guests who scan you play as your roaming team.</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px">
+      <button style="flex:1;padding:9px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.25);border-radius:var(--radius-sm);color:#f87171;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif" onclick="showToast('Bar Rail QR shown — ready to scan')">Show Bar Rail QR</button>
+      <button style="flex:1;padding:9px;background:rgba(52,211,153,0.08);border:1px dashed rgba(52,211,153,0.3);border-radius:var(--radius-sm);color:#34d399;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif" onclick="showToast('Your lanyard QR shown — guests can scan to join Team Alex')">Show My QR</button>
+    </div>
+  </div>
+
+  <div class="staff-section">
+    <div class="staff-section-title">
+      Staff Signal Queue
+      <span class="staff-section-count" id="s-signal-count">3</span>
+    </div>
+    <div id="staff-signal-queue">
+      <div class="staff-signal-item urgent" id="ss-1">
+        <div class="staff-table-badge">T-3</div>
+        <div class="staff-signal-body">
+          <div class="staff-signal-type">🍺 Drink order</div>
+          <div class="staff-signal-age urgent">Waiting 3:12 — urgent</div>
+        </div>
+        <button class="staff-done-btn" onclick="staffResolve('ss-1')">Done ✓</button>
+      </div>
+      <div class="staff-signal-item new" id="ss-2">
+        <div class="staff-table-badge">T-9</div>
+        <div class="staff-signal-body">
+          <div class="staff-signal-type">🧾 Check please</div>
+          <div class="staff-signal-age">Waiting 1:44</div>
+        </div>
+        <button class="staff-done-btn" onclick="staffResolve('ss-2')">Done ✓</button>
+      </div>
+      <div class="staff-signal-item" id="ss-3">
+        <div class="staff-table-badge">T-6</div>
+        <div class="staff-signal-body">
+          <div class="staff-signal-type">🍺 Drink order</div>
+          <div class="staff-signal-age">Waiting 0:38</div>
+        </div>
+        <button class="staff-done-btn" onclick="staffResolve('ss-3')">Done ✓</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="staff-section">
+    <div class="staff-section-title">
+      Drink Token Redemptions
+      <span class="staff-section-count" id="s-token-count">2</span>
+    </div>
+    <div id="staff-token-queue">
+      <div class="token-redeem-item" id="st-1">
+        <div class="token-redeem-header">
+          <span class="token-from">Table 11 → Table 7</span>
+          <span class="token-amount-badge">$10</span>
+        </div>
+        <div class="token-expiry soon">⏱ Expires in 12 minutes</div>
+        <button class="redeem-btn" onclick="staffRedeem('st-1','$10 · Table 11 → Table 7')">Tap to redeem — show Flash-Verify</button>
+      </div>
+      <div class="token-redeem-item" id="st-2">
+        <div class="token-redeem-header">
+          <span class="token-from">Table 4 → Table 2</span>
+          <span class="token-amount-badge">$15</span>
+        </div>
+        <div class="token-expiry">⏱ Expires in 41 minutes</div>
+        <button class="redeem-btn" onclick="staffRedeem('st-2','$15 · Table 4 → Table 2')">Tap to redeem — show Flash-Verify</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vibe + AI Suggestions -->
+  <div class="staff-section">
+    <div class="staff-section-title">
+      Room Vibe — Last Round
+      <span class="staff-section-count clear" id="vibe-avg-badge">Avg 3.8 / 5</span>
+    </div>
+    <div class="vibe-snapshot">
+      <div class="vibe-table-chip flagged" onclick="openVibeAction('T-9',2,'low')"><span class="vibe-score low">2</span><span class="vibe-table-num">T-9 ⚠</span></div>
+      <div class="vibe-table-chip" onclick="openVibeAction('T-2',3,'mid')"><span class="vibe-score mid">3</span><span class="vibe-table-num">T-2</span></div>
+      <div class="vibe-table-chip" onclick="openVibeAction('T-6',3,'mid')"><span class="vibe-score mid">3</span><span class="vibe-table-num">T-6</span></div>
+      <div class="vibe-table-chip great" onclick="openVibeAction('T-11',5,'high')"><span class="vibe-score high">5</span><span class="vibe-table-num">T-11 🔥</span></div>
+      <div class="vibe-table-chip great" onclick="openVibeAction('T-4',4,'high')"><span class="vibe-score high">4</span><span class="vibe-table-num">T-4</span></div>
+      <div class="vibe-table-chip great" onclick="openVibeAction('T-7',4,'high')"><span class="vibe-score high">4</span><span class="vibe-table-num">T-7</span></div>
+      <div class="vibe-table-chip" onclick="openVibeAction('T-3',3,'mid')"><span class="vibe-score mid">3</span><span class="vibe-table-num">T-3</span></div>
+      <div class="vibe-table-chip great" onclick="openVibeAction('T-14',5,'high')"><span class="vibe-score high">5</span><span class="vibe-table-num">T-14 🔥</span></div>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-top:8px">Tap any table to see AI suggestions and take action</div>
+  </div>
+
+  <!-- AI Suggestions panel -->
+  <div class="staff-section" id="ai-suggestions-panel" style="display:none">
+    <div class="staff-section-title" id="ai-panel-title">
+      🤖 AI Suggestions — T-9
+      <span onclick="closeAiPanel()" style="cursor:pointer;color:var(--text3);font-family:'DM Sans',sans-serif;font-weight:400;text-transform:none;letter-spacing:0;font-size:12px">Dismiss</span>
+    </div>
+    <div class="ai-suggestion-context" id="ai-suggestion-context"></div>
+    <div id="ai-suggestion-list"></div>
+  </div>
+
+  <!-- Push action modal -->
+  <div class="modal-overlay" id="action-overlay" onclick="closeActionModal()"></div>
+  <div class="signal-modal" id="action-modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="action-modal-title">Send to T-9</div>
+    <div id="action-modal-body"></div>
+  </div>
+
+  <!-- Table Turn -->
+  <div class="staff-section">
+    <div class="staff-section-title">Table Turn</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5">Select a table that has paid and left to reset it for new guests. Their session closes, scores are saved, and the table goes fresh.</div>
+    <div class="table-turn-grid" id="staff-turn-grid">
+      <div class="turn-table-btn" onclick="selectTurnTable(this,'T-5')">T-5<span class="tt-status">idle 22m</span></div>
+      <div class="turn-table-btn" onclick="selectTurnTable(this,'T-14')">T-14<span class="tt-status">idle 31m</span></div>
+      <div class="turn-table-btn" onclick="selectTurnTable(this,'T-2')">T-2<span class="tt-status">active 32m</span></div>
+      <div class="turn-table-btn" onclick="selectTurnTable(this,'T-6')">T-6<span class="tt-status">active 27m</span></div>
+      <div class="turn-table-btn" onclick="selectTurnTable(this,'T-9')">T-9<span class="tt-status">low vibe</span></div>
+      <div class="turn-table-btn" onclick="selectTurnTable(this,'T-3')">T-3<span class="tt-status">active 41m</span></div>
+    </div>
+    <button class="turn-confirm-btn" id="staff-turn-btn" disabled onclick="confirmTableTurn('staff')">Reset selected table</button>
+  </div>
+
+  <div class="staff-section" id="staff-broadcast-section" style="display:none">
+    <div class="staff-section-title" style="color:var(--accent)">📢 Manager Broadcast</div>
+    <div style="background:rgba(240,193,75,0.08);border:1px solid rgba(240,193,75,0.25);border-radius:var(--radius-sm);padding:12px;font-size:14px;font-weight:500;" id="staff-bc-msg"></div>
+  </div>
+
+</div>
+
+<div id="dashboard-view" class="view dashboard-view">
+
+  <div class="dash-header">
+    <div class="dash-venue">The Bitter End — Manager Dashboard</div>
+    <div class="dash-meta">Friday night · Round 3 in progress · <span style="color:var(--green)">12 active tables</span></div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="dash-grid">
+    <div class="kpi-card">
+      <div class="kpi-val green" id="d-tables">12</div>
+      <div class="kpi-label">Active Tables</div>
+      <div class="kpi-delta up" id="d-tables-delta">↑ from 8 at 9pm</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val amber" id="d-dwell">43m</div>
+      <div class="kpi-label">Avg Dwell</div>
+      <div class="kpi-delta up">↑ +8m vs last Fri</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val" id="d-arpu">$2.80</div>
+      <div class="kpi-label">ARPU-V</div>
+      <div class="kpi-delta up">↑ above $2.50 target</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val" id="d-signals">3</div>
+      <div class="kpi-label">Open Signals</div>
+      <div class="kpi-delta dn" id="d-signals-delta">2 waiting >2 min</div>
+    </div>
+  </div>
+
+  <!-- Staff Signal Queue -->
+  <div class="dash-section">
+    <div class="section-title">
+      Staff Signal Queue
+      <span class="section-action" onclick="clearAllSignals()">Clear all</span>
+    </div>
+    <div class="signal-queue" id="signal-queue">
+      <div class="signal-item new" id="sig-1">
+        <span class="signal-table-badge">T-3</span>
+        <span class="signal-type">🍺 Drink order</span>
+        <span class="signal-time">0:32</span>
+        <button class="signal-done" onclick="resolveSignal('sig-1')">Done</button>
+      </div>
+      <div class="signal-item new" id="sig-2">
+        <span class="signal-table-badge">T-9</span>
+        <span class="signal-type">🧾 Check please</span>
+        <span class="signal-time">1:14</span>
+        <button class="signal-done" onclick="resolveSignal('sig-2')">Done</button>
+      </div>
+      <div class="signal-item" id="sig-3">
+        <span class="signal-table-badge">T-6</span>
+        <span class="signal-type">🍺 Drink order</span>
+        <span class="signal-time">2:40</span>
+        <button class="signal-done" onclick="resolveSignal('sig-3')">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vibe Timeline -->
+  <div class="dash-section">
+    <div class="section-title">Vibe Check Timeline</div>
+    <div class="vibe-timeline" id="vibe-timeline">
+      <!-- bars injected by JS -->
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-top:8px">Avg sentiment per round · 1 (low) → 5 (high)</div>
+  </div>
+
+  <!-- Live Map -->
+  <div class="dash-section">
+    <div class="section-title">Live Map</div>
+    <div class="dash-map" id="dash-map">
+      <div class="map-grid"></div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>High engagement</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Active</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div>Flagged</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--text3)"></div>Idle</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div>Bar Rail</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#34d399;border:1px dashed #34d399"></div>Roaming</div>
+    </div>
+  </div>
+
+  <!-- Dwell chart -->
+  <div class="dash-section">
+    <div class="section-title">Dwell Analytics — Tonight</div>
+    <div class="dwell-chart" id="dwell-chart"></div>
+    <div style="font-size:11px;color:var(--text3);margin-top:6px">Tables active by hour · projected drop-off at midnight</div>
+  </div>
+
+  <!-- Broadcast -->
+  <div class="dash-section">
+    <div class="section-title">Broadcast to All Tables</div>
+    <div class="broadcast-area">
+      <input class="broadcast-input" id="broadcast-input" placeholder="Last call in 15 minutes!" />
+      <button class="broadcast-btn" onclick="sendBroadcast()">Send</button>
+    </div>
+  </div>
+
+  <!-- Kill switch / Table Turn -->
+  <div class="dash-section">
+    <div class="section-title">Table Turn &amp; Kill Switch</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Turn resets a table for new guests. Clear ends an active session. Ban blocks the UUID for 24 hours.</div>
+    <div id="kill-list">
+      <div class="kill-row">
+        <span class="kill-tname">Table 5 <span style="font-size:11px;color:var(--text3)">— idle 22 min</span></span>
+        <button class="kill-btn" style="background:rgba(240,193,75,0.12);color:var(--accent);border:1px solid rgba(240,193,75,0.25)" onclick="confirmTableTurn('manager','Table 5')">Turn</button>
+        <button class="kill-btn clear" onclick="showToast('Table 5 session cleared')">Clear</button>
+        <button class="kill-btn ban" onclick="showToast('Table 5 UUID banned 24h')">Ban</button>
+      </div>
+      <div class="kill-row">
+        <span class="kill-tname">Table 14 <span style="font-size:11px;color:var(--text3)">— idle 31 min</span></span>
+        <button class="kill-btn" style="background:rgba(240,193,75,0.12);color:var(--accent);border:1px solid rgba(240,193,75,0.25)" onclick="confirmTableTurn('manager','Table 14')">Turn</button>
+        <button class="kill-btn clear" onclick="showToast('Table 14 session cleared')">Clear</button>
+        <button class="kill-btn ban" onclick="showToast('Table 14 UUID banned 24h')">Ban</button>
+      </div>
+      <div class="kill-row">
+        <span class="kill-tname">Table 9 <span style="font-size:11px;color:var(--accent2)">— low vibe flagged</span></span>
+        <button class="kill-btn" style="background:rgba(240,193,75,0.12);color:var(--accent);border:1px solid rgba(240,193,75,0.25)" onclick="confirmTableTurn('manager','Table 9')">Turn</button>
+        <button class="kill-btn clear" onclick="showToast('Table 9 session cleared')">Clear</button>
+        <button class="kill-btn ban" onclick="showToast('Table 9 UUID banned 24h')">Ban</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── MODALS & OVERLAYS ── -->
+
+<!-- Signal modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeSignal()"></div>
+<div class="signal-modal" id="signal-modal">
+  <div class="modal-handle"></div>
+  <div class="modal-title">Signal your server</div>
+  <div class="signal-options">
+    <div class="signal-opt" onclick="sendSignal('Drink order')">
+      <span class="signal-opt-icon">🍺</span>
+      <span class="signal-opt-text">Drink order</span>
+    </div>
+    <div class="signal-opt" onclick="sendSignal('Check please')">
+      <span class="signal-opt-icon">🧾</span>
+      <span class="signal-opt-text">Check please</span>
+    </div>
+    <div class="signal-opt" onclick="sendSignal('Assistance needed')">
+      <span class="signal-opt-icon">🙋</span>
+      <span class="signal-opt-text">Assistance needed</span>
+    </div>
+  </div>
+</div>
+
+<!-- Vibe check modal -->
+<div class="modal-overlay" id="vibe-overlay" onclick="closeVibe()"></div>
+<div class="vibe-modal" id="vibe-modal">
+  <div class="modal-handle"></div>
+  <div class="vibe-title">How's the vibe? ✨</div>
+  <div class="vibe-sub">Quick tap — helps your venue improve</div>
+  <div class="vibe-opts">
+    <div class="vibe-opt" onclick="submitVibe(1)">😴</div>
+    <div class="vibe-opt" onclick="submitVibe(2)">😐</div>
+    <div class="vibe-opt" onclick="submitVibe(3)">🙂</div>
+    <div class="vibe-opt" onclick="submitVibe(4)">😄</div>
+    <div class="vibe-opt" onclick="submitVibe(5)">🔥</div>
+  </div>
+  <div class="vibe-skip" onclick="closeVibe()">Skip</div>
+</div>
+
+<!-- Flash verify overlay -->
+<div class="flash-overlay" id="flash-overlay">
+  <div class="flash-pattern" id="flash-pattern"></div>
+  <div class="flash-confirm">Token Active</div>
+  <div class="flash-sub">Show this screen to your bartender · expires in 5s</div>
+</div>
+
+<!-- Broadcast overlay (guest side) -->
+<div class="broadcast-overlay" id="bc-overlay">
+  <div class="broadcast-msg-card">
+    <div class="bc-eyebrow">📢 From The Bitter End</div>
+    <div class="bc-msg" id="bc-msg-text">Last call in 15 minutes!</div>
+    <button class="bc-dismiss" onclick="dismissBroadcast()">Got it</button>
+  </div>
+</div>
+
+<!-- Nudge prompt (from map) -->
+<div class="modal-overlay" id="nudge-overlay" onclick="closeNudgePrompt()"></div>
+<div class="signal-modal" id="nudge-modal">
+  <div class="modal-handle"></div>
+  <div class="modal-title" id="nudge-target-title">Nudge Table 3</div>
+  <div style="font-size:13px;color:var(--text2);margin-bottom:16px">You and Table 3 both answered <strong style="color:var(--accent)">1990s</strong> — AI Wingman will generate an icebreaker.</div>
+  <div class="signal-options">
+    <div class="signal-opt" onclick="sendNudgeFromMap()">
+      <span class="signal-opt-icon">🤖</span>
+      <span class="signal-opt-text">Send AI Wingman nudge</span>
+    </div>
+    <div class="signal-opt" onclick="closeNudgePrompt(); switchTab('token')">
+      <span class="signal-opt-icon">🎁</span>
+      <span class="signal-opt-text">Send them a drink token</span>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+let currentTab = 'game';
+let gamePhase = 'game'; // 'game' | 'intermission'
+let timerSeconds = 452; // 7:32
+let totalSeconds = 600; // 10:00 game phase
+let questionAnswered = false;
+let selectedTable = null;
+let selectedAmount = null;
+let currentQuestion = 0;
+let nudgeTarget = '';
+
+const questions = [
+  { text: 'Which decade saw the rise of grunge music?', answers: ['1970s','1980s','1990s','2000s'], correct: 2, mode: '🎯 Trivia' },
+  { text: 'What city is known as "The City of Roses"?', answers: ['Seattle','Portland','Eugene','Tacoma'], correct: 1, mode: '🎯 Trivia' },
+  { text: 'Most likely to still be here at last call?', answers: ['Table 4','Table 7','Table 11','Table 3'], correct: -1, mode: '🎭 Most Likely To' },
+  { text: 'Best bar snack: wings or fries?', answers: ['Wings 🍗','Fries 🍟','Both equally','Neither'], correct: -1, mode: '📊 Poll' },
+  { text: 'Which band is from Seattle?', answers: ['R.E.M.','Nirvana','The Doors','Radiohead'], correct: 1, mode: '🎯 Trivia' },
+];
+
+// ── Timer ──────────────────────────────────────────────────────
+function formatTime(s) {
+  return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+}
+
+setInterval(() => {
+  if (gamePhase === 'game') {
+    timerSeconds = Math.max(0, timerSeconds - 1);
+    document.getElementById('round-timer').textContent = formatTime(timerSeconds);
+    document.getElementById('timer-fill').style.width = (timerSeconds / totalSeconds * 100) + '%';
+    if (timerSeconds === 0) startIntermission();
+  } else {
+    timerSeconds = Math.min(300, timerSeconds + 1);
+    document.getElementById('round-timer').textContent = formatTime(timerSeconds);
+    const el = document.getElementById('inter-countdown');
+    if (el) el.textContent = formatTime(300 - timerSeconds);
+    if (timerSeconds >= 300) startNewRound();
+  }
+}, 1000);
+
+// Simulated leaderboard drift
+setInterval(() => {
+  const drift = [-10, 0, 0, 10, 20];
+  const ids = ['lb1-pts','lb2-pts','lb3-pts','lb4-pts','lb5-pts'];
+  const bases = [520, 490, 340, 290, 210];
+  ids.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (el) {
+      const v = bases[i] + drift[i] + Math.floor(Math.random()*20 - 5);
+      el.textContent = Math.max(0, v);
+    }
+  });
+  // Update KPI
+  const dTables = document.getElementById('d-tables');
+  if (dTables) {
+    const v = 10 + Math.floor(Math.random()*4);
+    dTables.textContent = v;
+    document.getElementById('active-count').textContent = v + ' active tables';
+  }
+}, 4000);
+
+// ── View switching ─────────────────────────────────────────────
+function switchView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.view-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(v + '-view').classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── Staff signal resolve ───────────────────────────────────────
+function staffResolve(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.opacity = '0'; el.style.transform = 'translateX(20px)';
+  setTimeout(() => el.remove(), 300);
+  const cnt = document.getElementById('s-open-signals');
+  const scnt = document.getElementById('s-signal-count');
+  const res = document.getElementById('s-resolved');
+  if (cnt) cnt.textContent = Math.max(0, parseInt(cnt.textContent||1) - 1);
+  if (scnt) scnt.textContent = Math.max(0, parseInt(scnt.textContent||1) - 1);
+  if (res) res.textContent = parseInt(res.textContent||0) + 1;
+  // Sync to dashboard queue too
+  const dq = document.getElementById('signal-queue');
+  if (dq) {
+    const tableMap = {'ss-1':'sig-1','ss-2':'sig-2','ss-3':'sig-3'};
+    const dashItem = document.getElementById(tableMap[id]);
+    if (dashItem) { dashItem.style.opacity='0'; setTimeout(()=>dashItem.remove(),300); }
+  }
+  const dcnt = document.getElementById('d-signals');
+  if (dcnt) dcnt.textContent = Math.max(0, parseInt(dcnt.textContent||1) - 1);
+  showToast('✓ Signal resolved');
+}
+
+// ── Staff token redeem ─────────────────────────────────────────
+function staffRedeem(id, label) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  // Show flash verify
+  const overlay = document.getElementById('flash-overlay');
+  const patterns = ['◆◇◆◇◆\n◇◆◇◆◇\n◆◇◆◇◆','▲△▲△▲\n△▲△▲△\n▲△▲△▲','●○●○●\n○●○●○\n●○●○●'];
+  const colors = ['#4ade80','#60a5fa','#f0c14b'];
+  overlay.style.background = colors[Math.floor(Math.random()*colors.length)];
+  document.getElementById('flash-pattern').textContent = patterns[Math.floor(Math.random()*patterns.length)];
+  overlay.classList.add('open');
+  setTimeout(() => {
+    overlay.classList.remove('open');
+    el.style.opacity = '0'; el.style.transform = 'translateX(20px)';
+    setTimeout(() => el.remove(), 300);
+    const tcnt = document.getElementById('s-tokens');
+    const scnt = document.getElementById('s-token-count');
+    if (tcnt) tcnt.textContent = Math.max(0, parseInt(tcnt.textContent||1) - 1);
+    if (scnt) scnt.textContent = Math.max(0, parseInt(scnt.textContent||1) - 1);
+    showToast(`✓ Redeemed: ${label}`);
+  }, 5000);
+}
+
+// ── AI Vibe Suggestions ───────────────────────────────────────
+const vibeData = {
+  'T-9': {
+    score: 2, trend: 'declining',
+    context: 'Table 9 has scored 2/5 for two consecutive rounds and hasn\'t answered the last 3 questions. Session active 48 minutes. No Staff Signal sent — disengagement is passive.',
+    suggestions: [
+      { icon: '💬', label: 'Send a personal note', desc: 'A direct message from you can reset the vibe. AI-drafted or write your own.', cta: 'Write note', type: 'note', style: 'urgent-sug' },
+      { icon: '🎁', label: 'Complimentary item offer', desc: 'A free snack or shot shows the venue cares. Converts disengaged tables 60% of the time.', cta: 'Send comp offer', type: 'comp', style: 'urgent-sug' },
+      { icon: '🍺', label: 'Targeted promo', desc: 'Send a private discount just to this table — next round 25% off. Creates urgency to stay.', cta: 'Push promo', type: 'promo', style: '' },
+      { icon: '⚡', label: 'Trigger Bounty on this table', desc: 'Make them the target — doubles points for challengers and puts them on the map. Re-engages competitively.', cta: 'Activate Bounty', type: 'bounty', style: '' },
+    ]
+  },
+  'T-2': {
+    score: 3, trend: 'stable',
+    context: 'Table 2 is holding steady at 3/5. Answering questions but not highly engaged. Session active 32 minutes. One drink order fulfilled 18 minutes ago.',
+    suggestions: [
+      { icon: '🍺', label: 'Targeted promo', desc: 'A nudge offer could push them from passive to active. Try a happy hour extension just for them.', cta: 'Push promo', type: 'promo', style: '' },
+      { icon: '⚡', label: 'Trigger Bounty on this table', desc: 'Put a target on them to draw attention from higher-scoring tables and spark competition.', cta: 'Activate Bounty', type: 'bounty', style: '' },
+      { icon: '💬', label: 'Send a personal note', desc: 'A friendly check-in can tip a neutral table positive.', cta: 'Write note', type: 'note', style: '' },
+    ]
+  },
+  'T-6': {
+    score: 3, trend: 'stable',
+    context: 'Table 6 at 3/5, stable. Active for 27 minutes. No signals sent. Engagement score is moderate — answering roughly half of questions.',
+    suggestions: [
+      { icon: '⚡', label: 'Trigger Bounty on this table', desc: 'A Bounty puts Table 6 in the spotlight and gives other tables a reason to challenge them.', cta: 'Activate Bounty', type: 'bounty', style: '' },
+      { icon: '🍺', label: 'Targeted promo', desc: 'Mid-session is the best time to offer a next-round deal — they\'re still warm.', cta: 'Push promo', type: 'promo', style: '' },
+    ]
+  },
+  'T-11': {
+    score: 5, trend: 'leading',
+    context: 'Table 11 is the crown holder at 5/5 vibe, 520 points. High engagement, 3 consecutive wins. They\'re your MVP table tonight.',
+    suggestions: [
+      { icon: '💬', label: 'Send a personal note', desc: 'Acknowledge the streak — people love being recognised. A quick note from staff builds loyalty.', cta: 'Send kudos', type: 'note', style: 'positive-sug' },
+      { icon: '🎁', label: 'Comp as a reward', desc: 'A small complimentary treat for the leading table reinforces that winning means something real.', cta: 'Send reward', type: 'comp', style: 'positive-sug' },
+    ]
+  },
+  'T-4': {
+    score: 4, trend: 'rising',
+    context: 'Table 4 at 4/5, rising trend. In second place on the leaderboard, 30 points behind the crown. High answer rate.',
+    suggestions: [
+      { icon: '⚡', label: 'Trigger Bounty on this table', desc: 'A Bounty on second place heats up the competition and could push them to challenge the crown.', cta: 'Activate Bounty', type: 'bounty', style: 'positive-sug' },
+      { icon: '💬', label: 'Send a personal note', desc: 'Encourage the chase — a "you\'re close!" message from the server adds narrative to the game.', cta: 'Write note', type: 'note', style: '' },
+    ]
+  },
+  'T-7': {
+    score: 4, trend: 'stable',
+    context: 'Table 7 at 4/5, stable. Currently ranked 3rd. Good engagement, answered 7 of last 10 questions. Session active 51 minutes.',
+    suggestions: [
+      { icon: '⚡', label: 'Trigger Bounty on this table', desc: 'A Bounty on 3rd place creates a target and could reignite their push for the top.', cta: 'Activate Bounty', type: 'bounty', style: '' },
+      { icon: '🍺', label: 'Targeted promo', desc: 'Reward a long session with a loyalty offer — they\'re your best dwell-time table tonight.', cta: 'Push promo', type: 'promo', style: 'positive-sug' },
+    ]
+  },
+  'T-3': {
+    score: 3, trend: 'stable',
+    context: 'Table 3 at 3/5. Moderate engagement. An AI Wingman nudge was sent to Table 7 from this table earlier — cross-table interaction attempted.',
+    suggestions: [
+      { icon: '🍺', label: 'Targeted promo', desc: 'They tried to connect with another table — a small offer rewards the social behaviour.', cta: 'Push promo', type: 'promo', style: '' },
+      { icon: '💬', label: 'Send a personal note', desc: 'Reference their Wingman nudge to make the interaction feel noticed.', cta: 'Write note', type: 'note', style: '' },
+    ]
+  },
+  'T-14': {
+    score: 5, trend: 'high',
+    context: 'Table 14 at 5/5. Highest vibe score in the room tonight. Active 38 minutes, strong answer rate.',
+    suggestions: [
+      { icon: '💬', label: 'Send a personal note', desc: 'A warm acknowledgment from staff turns a great experience into a memorable one.', cta: 'Send kudos', type: 'note', style: 'positive-sug' },
+      { icon: '🎁', label: 'Comp as a reward', desc: 'Reward the best vibe in the room — it\'s a story they\'ll tell when they leave.', cta: 'Send reward', type: 'comp', style: 'positive-sug' },
+    ]
+  },
+};
+
+function openVibeAction(tableId, score, level) {
+  const panel = document.getElementById('ai-suggestions-panel');
+  const title = document.getElementById('ai-panel-title');
+  const context = document.getElementById('ai-suggestion-context');
+  const list = document.getElementById('ai-suggestion-list');
+  const data = vibeData[tableId];
+  if (!data) return;
+
+  title.innerHTML = `🤖 AI Suggestions — ${tableId} <span onclick="closeAiPanel()" style="cursor:pointer;color:var(--text3);font-family:'DM Sans',sans-serif;font-weight:400;text-transform:none;letter-spacing:0;font-size:12px">Dismiss</span>`;
+  context.textContent = data.context;
+  list.innerHTML = data.suggestions.map(s => `
+    <div class="ai-suggestion-item ${s.style}" onclick="openActionModal('${tableId}','${s.type}','${s.label}')">
+      <div class="sug-icon">${s.icon}</div>
+      <div class="sug-body">
+        <div class="sug-label">${s.label}</div>
+        <div class="sug-desc">${s.desc}</div>
+        <div class="sug-cta ${level==='low'?'red':level==='high'?'green':''}">${s.cta} →</div>
+      </div>
+    </div>
+  `).join('');
+
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function closeAiPanel() {
+  document.getElementById('ai-suggestions-panel').style.display = 'none';
+}
+
+// ── Action modal ──────────────────────────────────────────────
+const actionTemplates = {
+  note: {
+    title: 'Personal note from you',
+    build: (tableId) => `
+      <div class="action-field-label">Message to ${tableId}</div>
+      <textarea class="action-input" id="action-note-text" rows="3" placeholder="Hey ${tableId} — hope you're having a great night! Let me know if there's anything I can do.">${noteDefaults[tableId]||''}</textarea>
+      <div class="action-chips" style="margin-top:8px">
+        <div class="action-chip" onclick="setNote(this,'Hey — hope the night is going well! Anything I can get you?')">Check-in</div>
+        <div class="action-chip" onclick="setNote(this,'Great playing tonight — you\\'re crushing it! 🔥')">Kudos</div>
+        <div class="action-chip" onclick="setNote(this,'You\\'re so close to the top — keep pushing! ⚡')">Encourage</div>
+      </div>
+      <button class="action-send-btn" onclick="dispatchAction('note','${tableId}')">Send note to ${tableId}</button>
+    `
+  },
+  promo: {
+    title: 'Targeted promo',
+    build: (tableId) => `
+      <div class="action-field-label">Offer for ${tableId}</div>
+      <div class="action-chips">
+        <div class="action-chip" onclick="selectChip(this,'promo')">Next round 25% off</div>
+        <div class="action-chip" onclick="selectChip(this,'promo')">Buy 2 get 1 free</div>
+        <div class="action-chip" onclick="selectChip(this,'promo')">Happy hour extension</div>
+        <div class="action-chip" onclick="selectChip(this,'promo')">Free dessert</div>
+      </div>
+      <div class="action-field-label" style="margin-top:12px">Or write your own</div>
+      <input class="action-input" id="action-promo-text" placeholder="e.g. Half-price cocktails next round" />
+      <button class="action-send-btn amber-btn" onclick="dispatchAction('promo','${tableId}')">Push promo to ${tableId}</button>
+    `
+  },
+  comp: {
+    title: 'Complimentary item',
+    build: (tableId) => `
+      <div class="action-field-label">What to send to ${tableId}</div>
+      <div class="action-chips">
+        <div class="action-chip" onclick="selectChip(this,'comp')">Nachos 🧀</div>
+        <div class="action-chip" onclick="selectChip(this,'comp')">Wings 🍗</div>
+        <div class="action-chip" onclick="selectChip(this,'comp')">Round of shots 🥃</div>
+        <div class="action-chip" onclick="selectChip(this,'comp')">Dessert 🍰</div>
+        <div class="action-chip" onclick="selectChip(this,'comp')">Surprise them</div>
+      </div>
+      <div class="action-field-label" style="margin-top:12px">Note to include (optional)</div>
+      <input class="action-input" id="action-comp-note" placeholder="e.g. On the house — enjoy the night!" />
+      <button class="action-send-btn green-btn" onclick="dispatchAction('comp','${tableId}')">Send complimentary item to ${tableId}</button>
+    `
+  },
+  bounty: {
+    title: 'Activate Bounty',
+    build: (tableId) => `
+      <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px">
+        Placing a Bounty on <strong style="color:var(--accent)">${tableId}</strong> doubles the point value of the next question for every table that challenges them. It puts ${tableId} in the spotlight and re-engages the whole room.
+      </div>
+      <div class="action-field-label">Bounty message to the room</div>
+      <div class="action-chips">
+        <div class="action-chip" onclick="selectChip(this,'bounty')">Challenge the leader — points doubled! ⚡</div>
+        <div class="action-chip" onclick="selectChip(this,'bounty')">${tableId} is the target — beat them this round 👑</div>
+      </div>
+      <button class="action-send-btn" style="margin-top:16px" onclick="dispatchAction('bounty','${tableId}')">⚡ Activate Bounty on ${tableId}</button>
+    `
+  }
+};
+
+const noteDefaults = {
+  'T-9': "Hey Table 9 — hope you're enjoying the night! Let me know if there's anything I can do to make it better.",
+  'T-11': "Table 11 you are absolutely crushing it tonight 🔥 Three rounds on top — impressive stuff!",
+  'T-14': "Table 14 — highest vibe in the room tonight. Love to see it! 🙌",
+};
+
+let activeActionTable = '';
+let activeActionType = '';
+let selectedChips = {};
+
+function openActionModal(tableId, type, label) {
+  activeActionTable = tableId;
+  activeActionType = type;
+  const tmpl = actionTemplates[type];
+  if (!tmpl) return;
+  document.getElementById('action-modal-title').textContent = `${label} → ${tableId}`;
+  document.getElementById('action-modal-body').innerHTML = tmpl.build(tableId);
+  document.getElementById('action-modal').classList.add('open');
+  document.getElementById('action-overlay').classList.add('open');
+}
+
+function closeActionModal() {
+  document.getElementById('action-modal').classList.remove('open');
+  document.getElementById('action-overlay').classList.remove('open');
+}
+
+function setNote(el, text) {
+  const ta = document.getElementById('action-note-text');
+  if (ta) ta.value = text;
+  document.querySelectorAll('.action-chip').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function selectChip(el, type) {
+  const chips = el.parentElement.querySelectorAll('.action-chip');
+  chips.forEach(c => c.classList.remove('sel','sel-green'));
+  el.classList.add(type === 'comp' ? 'sel-green' : 'sel');
+  selectedChips[type] = el.textContent;
+}
+
+function dispatchAction(type, tableId) {
+  closeActionModal();
+  closeAiPanel();
+
+  // Determine message for guest vibe lift card
+  let guestMsg = '';
+  if (type === 'note') {
+    const ta = document.getElementById('action-note-text');
+    guestMsg = ta ? ta.value : noteDefaults[tableId] || 'Hey — hope the night is going well!';
+  } else if (type === 'promo') {
+    const inp = document.getElementById('action-promo-text');
+    guestMsg = (inp && inp.value) ? inp.value : (selectedChips['promo'] || 'Next round 25% off — just for your table.');
+  } else if (type === 'comp') {
+    const note = document.getElementById('action-comp-note');
+    const item = selectedChips['comp'] || 'something special';
+    guestMsg = `${item} is on its way to your table${note && note.value ? ' — ' + note.value : '. On the house! 🙌'}`;
+  } else if (type === 'bounty') {
+    guestMsg = `A Bounty has been placed — beat ${tableId} this round and points DOUBLE. Game on. 👑`;
+  }
+
+  // Show on guest view if Table 9 (our demo guest table is T-7, show for effect)
+  const cardMap = { note: 'vlc-note', promo: 'vlc-promo', comp: 'vlc-comp', bounty: 'vlc-bounty' };
+  const msgMap  = { note: 'vlc-note-msg', promo: 'vlc-promo-msg', comp: 'vlc-comp-msg', bounty: 'vlc-bounty-msg' };
+  const card = document.getElementById(cardMap[type]);
+  const msgEl = document.getElementById(msgMap[type]);
+  if (card && msgEl) {
+    // Hide all lift cards first
+    ['vlc-note','vlc-promo','vlc-comp','vlc-bounty'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('visible');
+    });
+    msgEl.textContent = guestMsg;
+    card.classList.add('visible');
+  }
+
+  // Toast feedback
+  const labels = { note: '💬 Note sent', promo: '🍺 Promo pushed', comp: '🎁 Comp on its way', bounty: '⚡ Bounty activated' };
+  showToast(`${labels[type]} → ${tableId}`);
+
+  // If bounty — also update leaderboard crown area with a visual pulse
+  if (type === 'bounty') {
+    const lb = document.querySelector('#lb-1');
+    if (lb) { lb.style.background = 'rgba(240,193,75,0.15)'; setTimeout(()=>lb.style.background='',2000); }
+  }
+}
+function switchTab(tab) {
+  currentTab = tab;
+  ['game','map','token'].forEach(t => {
+    const s = document.getElementById(t + '-section');
+    const b = document.getElementById('nav-' + (t === 'token' ? 'token' : t));
+    if (s) s.style.display = tab === t ? 'block' : 'none';
+    if (b) b.classList.toggle('active', tab === t);
+  });
+  document.querySelector('.signal-fab').style.display = tab === 'signal' ? 'none' : 'flex';
+}
+
+// ── Game phase ─────────────────────────────────────────────────
+function startIntermission() {
+  gamePhase = 'intermission';
+  timerSeconds = 0;
+  document.getElementById('phase-label').textContent = 'Intermission';
+  document.getElementById('phase-label').classList.remove('active');
+  document.getElementById('phase-label').style.color = 'var(--accent)';
+  document.getElementById('question-area').style.display = 'none';
+  document.getElementById('intermission-banner').classList.add('visible');
+  document.getElementById('promo-card').classList.add('visible');
+  setTimeout(() => {
+    document.getElementById('nudge-card').classList.add('visible');
+  }, 1200);
+  setTimeout(() => openVibeCheck(), 800);
+}
+
+function startNewRound() {
+  gamePhase = 'game';
+  timerSeconds = 600;
+  document.getElementById('phase-label').textContent = 'Game Phase';
+  document.getElementById('phase-label').classList.add('active');
+  document.getElementById('phase-label').style.color = '';
+  document.getElementById('question-area').style.display = 'block';
+  document.getElementById('intermission-banner').classList.remove('visible');
+  document.getElementById('nudge-card').classList.remove('visible');
+  document.getElementById('promo-card').classList.remove('visible');
+  nextQuestion();
+}
+
+// ── Answer handling ────────────────────────────────────────────
+function selectAnswer(btn, isCorrect) {
+  if (questionAnswered) return;
+  questionAnswered = true;
+  document.querySelectorAll('.answer-btn').forEach(b => {
+    b.classList.add('locked');
+    if (b === btn) b.classList.add(isCorrect ? 'correct' : 'wrong');
+  });
+  // Mark correct answer
+  const btns = document.querySelectorAll('.answer-btn');
+  const q = questions[currentQuestion % questions.length];
+  if (q.correct >= 0) btns[q.correct].classList.add('correct');
+
+  if (isCorrect) {
+    const pts = parseInt(document.getElementById('my-score').textContent) + 80;
+    document.getElementById('my-score').textContent = pts;
+    showToast('+80 points! 🎉');
+  } else {
+    showToast('Not quite — the right answer is highlighted');
+  }
+  setTimeout(() => nextQuestion(), 2000);
+}
+
+function nextQuestion() {
+  currentQuestion++;
+  if (currentQuestion >= questions.length) { startIntermission(); return; }
+  const q = questions[currentQuestion % questions.length];
+  questionAnswered = false;
+  document.getElementById('question-text').textContent = q.text;
+  document.querySelector('.mode-chip').textContent = q.mode;
+  document.getElementById('q-num').textContent = `Q ${currentQuestion + 1}/10`;
+  const grid = document.getElementById('answers-grid');
+  grid.innerHTML = q.answers.map((a, i) =>
+    `<button class="answer-btn" onclick="selectAnswer(this, ${i === q.correct})"><span class="answer-letter">${'ABCD'[i]}</span>${a}</button>`
+  ).join('');
+}
+
+// ── Staff Signal ───────────────────────────────────────────────
+function openSignal() {
+  document.getElementById('signal-modal').classList.add('open');
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeSignal() {
+  document.getElementById('signal-modal').classList.remove('open');
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+function sendSignal(type) {
+  closeSignal();
+  showToast(`✅ Server notified — ${type}`);
+  // Add to dashboard queue
+  const queue = document.getElementById('signal-queue');
+  if (queue) {
+    const item = document.createElement('div');
+    const id = 'sig-new-' + Date.now();
+    item.className = 'signal-item new';
+    item.id = id;
+    const icons = {'Drink order':'🍺','Check please':'🧾','Assistance needed':'🙋'};
+    item.innerHTML = `<span class="signal-table-badge">T-7</span><span class="signal-type">${icons[type]||'🚩'} ${type}</span><span class="signal-time">0:00</span><button class="signal-done" onclick="resolveSignal('${id}')">Done</button>`;
+    queue.prepend(item);
+    const cnt = document.getElementById('d-signals');
+    if (cnt) cnt.textContent = parseInt(cnt.textContent||0) + 1;
+  }
+}
+
+// ── Dashboard signal resolve ───────────────────────────────────
+function resolveSignal(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.style.opacity = '0'; el.style.transform = 'translateX(20px)';
+    setTimeout(() => el.remove(), 300);
+    const cnt = document.getElementById('d-signals');
+    if (cnt) cnt.textContent = Math.max(0, parseInt(cnt.textContent||1) - 1);
+    showToast('Signal resolved ✓');
+  }
+}
+function clearAllSignals() {
+  document.querySelectorAll('.signal-item').forEach(el => {
+    el.style.opacity = '0'; setTimeout(() => el.remove(), 300);
+  });
+  const cnt = document.getElementById('d-signals');
+  if (cnt) cnt.textContent = '0';
+  showToast('All signals cleared');
+}
+
+// ── Vibe check ─────────────────────────────────────────────────
+function openVibeCheck() {
+  document.getElementById('vibe-modal').classList.add('open');
+  document.getElementById('vibe-overlay').classList.add('open');
+  setTimeout(() => closeVibe(), 12000);
+}
+function closeVibe() {
+  document.getElementById('vibe-modal').classList.remove('open');
+  document.getElementById('vibe-overlay').classList.remove('open');
+}
+function submitVibe(score) {
+  closeVibe();
+  showToast(['','😴 Noted','😐 Thanks','🙂 Great!','😄 Love it!','🔥 On fire!'][score]);
+}
+
+// ── Nudge ──────────────────────────────────────────────────────
+function waveBack() {
+  document.getElementById('nudge-card').classList.remove('visible');
+  showToast('👋 Waved back at Table 3!');
+}
+function dismissNudge() {
+  document.getElementById('nudge-card').classList.remove('visible');
+}
+function showNudgePrompt(tableName) {
+  nudgeTarget = tableName;
+  document.getElementById('nudge-target-title').textContent = `Nudge ${tableName}`;
+  document.getElementById('nudge-modal').classList.add('open');
+  document.getElementById('nudge-overlay').classList.add('open');
+}
+function closeNudgePrompt() {
+  document.getElementById('nudge-modal').classList.remove('open');
+  document.getElementById('nudge-overlay').classList.remove('open');
+}
+function sendNudgeFromMap() {
+  closeNudgePrompt();
+  showToast(`🤖 AI Wingman nudge sent to ${nudgeTarget}`);
+}
+
+// ── Tokens ─────────────────────────────────────────────────────
+function pickTable(el, name) {
+  document.querySelectorAll('.table-pick').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected'); selectedTable = name;
+  updateSendBtn();
+}
+function pickAmount(el, amt) {
+  document.querySelectorAll('.amount-chip').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected'); selectedAmount = amt;
+  updateSendBtn();
+}
+function updateSendBtn() {
+  const btn = document.getElementById('send-token-btn');
+  if (selectedTable && selectedAmount) {
+    btn.disabled = false;
+    btn.textContent = `Send ${selectedAmount} to ${selectedTable} via Apple Pay`;
+  }
+}
+function sendToken() {
+  showToast(`🎁 ${selectedAmount} token sent to ${selectedTable}!`);
+  document.getElementById('token-badge').classList.remove('show');
+  document.querySelectorAll('.table-pick,.amount-chip').forEach(e => e.classList.remove('selected'));
+  selectedTable = null; selectedAmount = null;
+  document.getElementById('send-token-btn').disabled = true;
+  document.getElementById('send-token-btn').textContent = 'Send Token via Apple Pay';
+}
+
+// ── Flash verify ───────────────────────────────────────────────
+function showFlashVerify() {
+  const overlay = document.getElementById('flash-overlay');
+  const patterns = ['◆◇◆◇◆\n◇◆◇◆◇\n◆◇◆◇◆','▲△▲△▲\n△▲△▲△\n▲△▲△▲','●○●○●\n○●○●○\n●○●○●'];
+  const colors = ['#4ade80','#60a5fa','#f0c14b','#a78bfa'];
+  const pat = patterns[Math.floor(Math.random()*patterns.length)];
+  const col = colors[Math.floor(Math.random()*colors.length)];
+  overlay.style.background = col;
+  document.getElementById('flash-pattern').textContent = pat;
+  overlay.classList.add('open');
+  setTimeout(() => overlay.classList.remove('open'), 5000);
+}
+
+// ── Broadcast ──────────────────────────────────────────────────
+function sendBroadcast() {
+  const msg = document.getElementById('broadcast-input').value.trim();
+  if (!msg) return;
+  document.getElementById('bc-msg-text').textContent = msg;
+  document.getElementById('bc-overlay').classList.add('show');
+  // Also surface on staff view
+  const sbs = document.getElementById('staff-broadcast-section');
+  const sbm = document.getElementById('staff-bc-msg');
+  if (sbs && sbm) { sbm.textContent = msg; sbs.style.display = 'block'; }
+  document.getElementById('broadcast-input').value = '';
+  showToast('Broadcast sent to all tables');
+}
+function dismissBroadcast() {
+  document.getElementById('bc-overlay').classList.remove('show');
+}
+
+// ── Toast ──────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ── Build dashboard visuals ────────────────────────────────────
+function buildVibeTimeline() {
+  const data = [3.2, 3.8, 4.1, 3.6, 4.4, 4.2, 3.9, 4.6];
+  const labels = ['8pm','','9pm','','10pm','','11pm','Now'];
+  const colors = ['#4ade80','#60a5fa','#f0c14b','#a78bfa','#4ade80','#60a5fa','#f0c14b','#4ade80'];
+  const container = document.getElementById('vibe-timeline');
+  if (!container) return;
+  container.innerHTML = data.map((v, i) => `
+    <div class="vibe-bar-wrap">
+      <div class="vibe-bar" style="height:${v/5*100}%;background:${colors[i]};min-height:4px"></div>
+      <div class="vibe-bar-lbl">${labels[i]}</div>
+    </div>
+  `).join('');
+}
+
+function buildDwellChart() {
+  const data = [2, 4, 6, 8, 11, 14, 12, 10, 8, 5];
+  const labels = ['7','8','9','10','11','12','1','2','3','4am'];
+  const container = document.getElementById('dwell-chart');
+  if (!container) return;
+  const max = Math.max(...data);
+  container.innerHTML = data.map((v, i) => {
+    const proj = i >= 7;
+    return `<div class="dwell-bar-wrap">
+      <div class="dwell-bar" style="height:${v/max*100}%;opacity:${proj?0.35:0.75};${proj?'border:1px dashed var(--blue);background:transparent':''}"></div>
+      <div class="dwell-bar-lbl">${labels[i]}</div>
+    </div>`;
+  }).join('');
+}
+
+function buildDashMap() {
+  const tables = [
+    {id:'11',x:15,y:12,state:'hot',label:'520pts'},
+    {id:'4', x:52,y:10,state:'active',label:'490pts'},
+    {id:'7', x:72,y:35,state:'active',label:'340pts'},
+    {id:'2', x:35,y:40,state:'active',label:'290pts'},
+    {id:'3', x:18,y:55,state:'active',label:'shared'},
+    {id:'9', x:60,y:58,state:'flagged',label:'low vibe'},
+    {id:'6', x:80,y:22,state:'active',label:'180pts'},
+    {id:'14',x:45,y:72,state:'idle',label:'idle 31m'},
+    {id:'5', x:82,y:68,state:'idle',label:'idle 22m'},
+    {id:'BAR',x:46,y:86,state:'bar-rail',label:'8 players · 480pts',display:'BAR'},
+    {id:'ALEX',x:28,y:28,state:'roaming',label:'Team Alex · 3 roaming',display:'ALEX'},
+  ];
+  const map = document.getElementById('dash-map');
+  if (!map) return;
+  const grid = map.querySelector('.map-grid');
+  map.innerHTML = '';
+  if (grid) map.appendChild(grid); else { const g = document.createElement('div'); g.className='map-grid'; map.appendChild(g); }
+
+  tables.forEach(t => {
+    const isSpecial = t.state === 'bar-rail' || t.state === 'roaming';
+    const size = t.state === 'hot' ? 44 : t.state === 'idle' ? 28 : isSpecial ? 38 : 36;
+    const node = document.createElement('div');
+    node.className = 'dash-table-node';
+    node.style.cssText = `left:${t.x}%;top:${t.y}%`;
+    const extraStyle = t.state === 'bar-rail' ? 'border-radius:6px;font-size:10px;' : t.state === 'roaming' ? 'border-style:dashed;font-size:10px;' : '';
+    node.innerHTML = `
+      ${t.state==='hot'?'<span style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-size:12px">👑</span>':''}
+      ${t.state==='bar-rail'?'<span style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-size:11px">🍺</span>':''}
+      ${t.state==='roaming'?'<span style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-size:11px">🚶</span>':''}
+      <div class="dash-table-dot ${t.state}" style="width:${size}px;height:${size}px;${extraStyle}">${t.display||t.id}</div>
+      <div class="dash-table-label">${t.label}</div>
+    `;
+    map.appendChild(node);
+  });
+}
+
+// ── Guest Exit Flow ────────────────────────────────────────────
+let exitRating = 0;
+let sessionStartTime = Date.now();
+
+function openExitFlow() {
+  document.getElementById('exit-modal').classList.add('open');
+  document.getElementById('exit-overlay').classList.add('open');
+  exitRating = 0;
+  document.querySelectorAll('.exit-star').forEach(s => s.classList.remove('lit'));
+  document.querySelectorAll('.exit-reason').forEach(r => r.classList.remove('sel'));
+}
+
+function closeExitFlow() {
+  document.getElementById('exit-modal').classList.remove('open');
+  document.getElementById('exit-overlay').classList.remove('open');
+}
+
+function rateExit(n) {
+  exitRating = n;
+  document.querySelectorAll('.exit-star').forEach((s, i) => {
+    s.classList.toggle('lit', i < n);
+  });
+}
+
+function toggleReason(el) {
+  el.classList.toggle('sel');
+}
+
+function confirmExit() {
+  closeExitFlow();
+  // Calculate session time
+  const mins = Math.floor((Date.now() - sessionStartTime) / 60000) + 51;
+  document.getElementById('gb-score').textContent = document.getElementById('my-score').textContent;
+  document.getElementById('gb-time').textContent = mins + 'm';
+  document.getElementById('goodbye-screen').classList.add('show');
+  // Update manager dashboard — remove Table 7 from active count
+  const dTables = document.getElementById('d-tables');
+  if (dTables) dTables.textContent = Math.max(0, parseInt(dTables.textContent) - 1);
+}
+
+function rejoinSession() {
+  document.getElementById('goodbye-screen').classList.remove('show');
+  sessionStartTime = Date.now();
+  showToast('Welcome back! Session restored.');
+}
+
+// ── Table Turn ─────────────────────────────────────────────────
+let selectedTurnTable = null;
+
+function selectTurnTable(el, tableId) {
+  document.querySelectorAll('.turn-table-btn').forEach(b => b.classList.remove('sel-turn'));
+  el.classList.add('sel-turn');
+  selectedTurnTable = tableId;
+  const btn = document.getElementById('staff-turn-btn');
+  if (btn) { btn.disabled = false; btn.textContent = `Reset ${tableId} for new guests`; }
+}
+
+function confirmTableTurn(source, tableId) {
+  const target = tableId || selectedTurnTable;
+  if (!target) return;
+
+  // Show turn confirmation overlay
+  const msg = `${target} has been reset. Session saved, table is fresh for new guests.`;
+  showToast(`✓ ${target} turned — ready for new guests`);
+
+  // Reset staff turn UI
+  document.querySelectorAll('.turn-table-btn').forEach(b => b.classList.remove('sel-turn'));
+  const btn = document.getElementById('staff-turn-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Reset selected table'; }
+  selectedTurnTable = null;
+
+  // Remove from kill list if manager view
+  if (source === 'manager') {
+    const rows = document.querySelectorAll('#kill-list .kill-row');
+    rows.forEach(row => {
+      if (row.textContent.includes(tableId)) {
+        row.style.opacity = '0'; row.style.transform = 'translateX(20px)';
+        setTimeout(() => row.remove(), 300);
+      }
+    });
+  }
+
+  // Update active table count
+  const dTables = document.getElementById('d-tables');
+  if (dTables) dTables.textContent = Math.max(0, parseInt(dTables.textContent) - 1);
+  const sCnt = document.getElementById('s-resolved');
+  if (sCnt) sCnt.textContent = parseInt(sCnt.textContent || 0) + 1;
+
+  // Show a brief "fresh table" card on the guest view as if new guest just scanned
+  setTimeout(() => {
+    if (source === 'staff') {
+      showToast(`New guests at ${target} — session is live`);
+    }
+  }, 1500);
+}
+
+buildDwellChart();
+buildDashMap();
+
+// Animate vibe bars periodically
+setInterval(() => {
+  const bars = document.querySelectorAll('#vibe-timeline .vibe-bar');
+  if (bars.length) {
+    const last = bars[bars.length - 1];
+    const v = 3 + Math.random() * 2;
+    last.style.height = (v/5*100) + '%';
+  }
+}, 5000);
+</script>
+</body>
+</html>
