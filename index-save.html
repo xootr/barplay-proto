@@ -796,6 +796,81 @@ body {
 .vibe-score.high { color: var(--green); }
 .vibe-table-num { color: var(--text2); }
 
+/* Presence state dots on vibe chips */
+.presence-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.presence-dot.active { background: var(--green); }
+.presence-dot.quiet {
+  background: var(--accent);
+  animation: presence-pulse 1.6s ease-in-out infinite;
+}
+.presence-dot.likely-gone {
+  background: var(--text3);
+  animation: presence-fade 2.4s ease-in-out infinite;
+}
+@keyframes presence-pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+@keyframes presence-fade {
+  0%,100% { opacity: 0.6; } 50% { opacity: 0.2; }
+}
+
+/* Vibe chip presence variants */
+.vibe-table-chip.quiet {
+  border-color: rgba(240,193,75,0.3);
+  background: rgba(240,193,75,0.04);
+}
+.vibe-table-chip.likely-gone {
+  opacity: 0.55;
+  border-style: dashed;
+  border-color: var(--text3);
+}
+
+/* Map node presence dimming */
+.table-node.quiet { opacity: 0.75; }
+.table-node.likely-gone {
+  opacity: 0.4;
+  filter: grayscale(0.6);
+  transition: opacity 2s ease, filter 2s ease;
+}
+.dash-table-node.quiet { opacity: 0.7; }
+.dash-table-node.likely-gone {
+  opacity: 0.35;
+  filter: grayscale(0.6);
+  transition: opacity 2s ease, filter 2s ease;
+}
+
+/* Presence legend in staff section */
+.presence-legend {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  margin-top: 8px; font-size: 11px; color: var(--text3);
+}
+.presence-legend-item { display: flex; align-items: center; gap: 5px; }
+
+/* Group session presence indicators */
+.group-presence-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 6px;
+}
+.group-count-display { display: flex; align-items: baseline; gap: 5px; }
+.group-count-trend {
+  font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 4px;
+}
+.group-count-trend.declining { background: rgba(255,107,107,0.12); color: var(--accent2); }
+.group-count-trend.stable { background: rgba(90,90,122,0.15); color: var(--text2); }
+.group-count-trend.growing { background: rgba(74,222,128,0.12); color: var(--green); }
+.group-presence-bar { display: flex; gap: 3px; align-items: center; }
+.group-presence-pip {
+  width: 7px; height: 7px; border-radius: 50%; transition: all 0.6s ease;
+}
+.group-presence-pip.active { background: var(--green); }
+.group-presence-pip.quiet { background: var(--accent); animation: presence-pulse 1.6s ease-in-out infinite; }
+.group-presence-pip.gone { background: var(--text3); opacity: 0.3; }
+.group-last-active { font-size: 10px; color: var(--text3); margin-top: 4px; }
+.group-last-active.warn { color: var(--accent); }
+
 /* Flash verify — staff side */
 .staff-flash-btn {
   width: 100%; padding: 12px; background: var(--green); color: #0a0a0f;
@@ -1087,9 +1162,9 @@ body {
   </div>
   <div class="session-type-bar">
     <span>Tonight:</span>
-    <span class="bar-rail-badge">🍺 Bar Rail · 8 players</span>
-    <span class="roaming-badge">🚶 Team Alex · 3 players</span>
-    <span style="margin-left:auto;color:var(--text3)">23 total active</span>
+    <span class="bar-rail-badge" id="stb-bar-rail">🍺 Bar Rail · 6 active</span>
+    <span class="roaming-badge" id="stb-roaming">🚶 Team Alex · 3 active</span>
+    <span style="margin-left:auto;color:var(--text3)" id="stb-total">21 total active</span>
   </div>
 
   <!-- Game section (shown during game) -->
@@ -1437,24 +1512,51 @@ body {
   <div class="staff-section">
     <div class="staff-section-title">Non-Table Sessions</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div class="bar-rail-info">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-          <span style="font-size:14px">🍺</span>
-          <span style="font-size:11px;font-weight:700;color:#f87171;text-transform:uppercase;letter-spacing:0.06em">Bar Rail</span>
+
+      <!-- Bar Rail card -->
+      <div class="bar-rail-info" id="bar-rail-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:14px">🍺</span>
+            <span style="font-size:11px;font-weight:700;color:#f87171;text-transform:uppercase;letter-spacing:0.06em">Bar Rail</span>
+          </div>
+          <span class="group-count-trend declining" id="br-trend">↓ −2</span>
         </div>
-        <div class="bar-rail-count" id="bar-rail-count">8</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:2px">players at bar</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:8px;line-height:1.4">Fixed QR on bar counter. Shared session, competing as a group.</div>
-      </div>
-      <div class="bar-rail-info" style="border-color:rgba(52,211,153,0.2)">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-          <span style="font-size:14px">🚶</span>
-          <span style="font-size:11px;font-weight:700;color:#34d399;text-transform:uppercase;letter-spacing:0.06em">Team Alex</span>
+        <div class="group-count-display">
+          <div class="bar-rail-count" id="bar-rail-count">6</div>
+          <span style="font-size:10px;color:var(--text3);margin-bottom:3px">active</span>
         </div>
-        <div class="roaming-count" id="roaming-count">3</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:2px">scanned your QR</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:8px;line-height:1.4">Your lanyard QR. Guests who scan you play as your roaming team.</div>
+        <div class="group-presence-row">
+          <div class="group-presence-bar" id="br-pip-bar">
+            <!-- pips injected by JS -->
+          </div>
+          <span style="font-size:10px;color:var(--text3)">of 8 peak</span>
+        </div>
+        <div class="group-last-active warn" id="br-last-active">Last answer: 3 min ago</div>
       </div>
+
+      <!-- Roaming card -->
+      <div class="bar-rail-info" style="border-color:rgba(52,211,153,0.2)" id="roaming-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:14px">🚶</span>
+            <span style="font-size:11px;font-weight:700;color:#34d399;text-transform:uppercase;letter-spacing:0.06em">Team Alex</span>
+          </div>
+          <span class="group-count-trend stable" id="rm-trend">→ stable</span>
+        </div>
+        <div class="group-count-display">
+          <div class="roaming-count" id="roaming-count">3</div>
+          <span style="font-size:10px;color:var(--text3);margin-bottom:3px">active</span>
+        </div>
+        <div class="group-presence-row">
+          <div class="group-presence-bar" id="rm-pip-bar">
+            <!-- pips injected by JS -->
+          </div>
+          <span style="font-size:10px;color:var(--text3)">of 3 peak</span>
+        </div>
+        <div class="group-last-active" id="rm-last-active">Last answer: 1 min ago</div>
+      </div>
+
     </div>
     <div style="margin-top:10px;display:flex;gap:8px">
       <button style="flex:1;padding:9px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.25);border-radius:var(--radius-sm);color:#f87171;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif" onclick="showToast('Bar Rail QR shown — ready to scan')">Show Bar Rail QR</button>
@@ -1526,17 +1628,46 @@ body {
       Room Vibe — Last Round
       <span class="staff-section-count clear" id="vibe-avg-badge">Avg 3.8 / 5</span>
     </div>
-    <div class="vibe-snapshot">
-      <div class="vibe-table-chip flagged" onclick="openVibeAction('T-9',2,'low')"><span class="vibe-score low">2</span><span class="vibe-table-num">T-9 ⚠</span></div>
-      <div class="vibe-table-chip" onclick="openVibeAction('T-2',3,'mid')"><span class="vibe-score mid">3</span><span class="vibe-table-num">T-2</span></div>
-      <div class="vibe-table-chip" onclick="openVibeAction('T-6',3,'mid')"><span class="vibe-score mid">3</span><span class="vibe-table-num">T-6</span></div>
-      <div class="vibe-table-chip great" onclick="openVibeAction('T-11',5,'high')"><span class="vibe-score high">5</span><span class="vibe-table-num">T-11 🔥</span></div>
-      <div class="vibe-table-chip great" onclick="openVibeAction('T-4',4,'high')"><span class="vibe-score high">4</span><span class="vibe-table-num">T-4</span></div>
-      <div class="vibe-table-chip great" onclick="openVibeAction('T-7',4,'high')"><span class="vibe-score high">4</span><span class="vibe-table-num">T-7</span></div>
-      <div class="vibe-table-chip" onclick="openVibeAction('T-3',3,'mid')"><span class="vibe-score mid">3</span><span class="vibe-table-num">T-3</span></div>
-      <div class="vibe-table-chip great" onclick="openVibeAction('T-14',5,'high')"><span class="vibe-score high">5</span><span class="vibe-table-num">T-14 🔥</span></div>
+    <div class="vibe-snapshot" id="staff-vibe-snapshot">
+      <div class="vibe-table-chip flagged likely-gone" onclick="openVibeAction('T-9',2,'low')" id="vpc-T-9">
+        <div class="presence-dot likely-gone"></div>
+        <span class="vibe-score low">2</span><span class="vibe-table-num">T-9 ⚠</span>
+      </div>
+      <div class="vibe-table-chip quiet" onclick="openVibeAction('T-2',3,'mid')" id="vpc-T-2">
+        <div class="presence-dot quiet"></div>
+        <span class="vibe-score mid">3</span><span class="vibe-table-num">T-2</span>
+      </div>
+      <div class="vibe-table-chip" onclick="openVibeAction('T-6',3,'mid')" id="vpc-T-6">
+        <div class="presence-dot active"></div>
+        <span class="vibe-score mid">3</span><span class="vibe-table-num">T-6</span>
+      </div>
+      <div class="vibe-table-chip great" onclick="openVibeAction('T-11',5,'high')" id="vpc-T-11">
+        <div class="presence-dot active"></div>
+        <span class="vibe-score high">5</span><span class="vibe-table-num">T-11 🔥</span>
+      </div>
+      <div class="vibe-table-chip great" onclick="openVibeAction('T-4',4,'high')" id="vpc-T-4">
+        <div class="presence-dot active"></div>
+        <span class="vibe-score high">4</span><span class="vibe-table-num">T-4</span>
+      </div>
+      <div class="vibe-table-chip great" onclick="openVibeAction('T-7',4,'high')" id="vpc-T-7">
+        <div class="presence-dot active"></div>
+        <span class="vibe-score high">4</span><span class="vibe-table-num">T-7</span>
+      </div>
+      <div class="vibe-table-chip quiet" onclick="openVibeAction('T-3',3,'mid')" id="vpc-T-3">
+        <div class="presence-dot quiet"></div>
+        <span class="vibe-score mid">3</span><span class="vibe-table-num">T-3</span>
+      </div>
+      <div class="vibe-table-chip great" onclick="openVibeAction('T-14',5,'high')" id="vpc-T-14">
+        <div class="presence-dot active"></div>
+        <span class="vibe-score high">5</span><span class="vibe-table-num">T-14 🔥</span>
+      </div>
     </div>
-    <div style="font-size:11px;color:var(--text3);margin-top:8px">Tap any table to see AI suggestions and take action</div>
+    <div class="presence-legend">
+      <div class="presence-legend-item"><div class="presence-dot active"></div>Active</div>
+      <div class="presence-legend-item"><div class="presence-dot quiet"></div>Quiet (5–15 min)</div>
+      <div class="presence-legend-item"><div class="presence-dot likely-gone"></div>Likely gone (15+ min)</div>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-top:6px">Tap any chip to see AI suggestions · presence updates live</div>
   </div>
 
   <!-- AI Suggestions panel -->
@@ -1902,69 +2033,69 @@ function staffRedeem(id, label) {
 // ── AI Vibe Suggestions ───────────────────────────────────────
 const vibeData = {
   'T-9': {
-    score: 2, trend: 'declining',
-    context: 'Table 9 has scored 2/5 for two consecutive rounds and hasn\'t answered the last 3 questions. Session active 48 minutes. No Staff Signal sent — disengagement is passive.',
+    score: 2, trend: 'declining', presence: 'likely-gone',
+    context: 'Table 9 is scoring 2/5 for two consecutive rounds, hasn\'t answered the last 3 questions, and the presence engine shows Likely Gone — no interaction for 17 minutes and the WebSocket is unstable. This is the highest-urgency table in the room right now.',
     suggestions: [
-      { icon: '💬', label: 'Send a personal note', desc: 'A direct message from you can reset the vibe. AI-drafted or write your own.', cta: 'Write note', type: 'note', style: 'urgent-sug' },
-      { icon: '🎁', label: 'Complimentary item offer', desc: 'A free snack or shot shows the venue cares. Converts disengaged tables 60% of the time.', cta: 'Send comp offer', type: 'comp', style: 'urgent-sug' },
-      { icon: '🍺', label: 'Targeted promo', desc: 'Send a private discount just to this table — next round 25% off. Creates urgency to stay.', cta: 'Push promo', type: 'promo', style: '' },
-      { icon: '⚡', label: 'Trigger Bounty on this table', desc: 'Make them the target — doubles points for challengers and puts them on the map. Re-engages competitively.', cta: 'Activate Bounty', type: 'bounty', style: '' },
+      { icon: '💬', label: 'Send a personal note', desc: 'A direct message can reset the vibe. They may still be reachable if the connection holds.', cta: 'Write note', type: 'note', style: 'urgent-sug' },
+      { icon: '🎁', label: 'Complimentary item offer', desc: 'A free snack or shot shows the venue cares. Converts disengaged tables 60% of the time — if delivered before they leave.', cta: 'Send comp offer', type: 'comp', style: 'urgent-sug' },
+      { icon: '🍺', label: 'Targeted promo', desc: 'A private discount creates urgency to stay for one more round.', cta: 'Push promo', type: 'promo', style: '' },
+      { icon: '⚡', label: 'Trigger Bounty on this table', desc: 'Put a target on them — draws the whole room\'s attention and can re-engage competitively.', cta: 'Activate Bounty', type: 'bounty', style: '' },
     ]
   },
   'T-2': {
-    score: 3, trend: 'stable',
-    context: 'Table 2 is holding steady at 3/5. Answering questions but not highly engaged. Session active 32 minutes. One drink order fulfilled 18 minutes ago.',
+    score: 3, trend: 'stable', presence: 'quiet',
+    context: 'Table 2 is holding at 3/5 but has gone Quiet — no interaction for 9 minutes, tab likely hidden. They\'re still connected but not engaged. Session active 32 minutes. A nudge now could bring them back before they drift to Likely Gone.',
     suggestions: [
-      { icon: '🍺', label: 'Targeted promo', desc: 'A nudge offer could push them from passive to active. Try a happy hour extension just for them.', cta: 'Push promo', type: 'promo', style: '' },
-      { icon: '⚡', label: 'Trigger Bounty on this table', desc: 'Put a target on them to draw attention from higher-scoring tables and spark competition.', cta: 'Activate Bounty', type: 'bounty', style: '' },
-      { icon: '💬', label: 'Send a personal note', desc: 'A friendly check-in can tip a neutral table positive.', cta: 'Write note', type: 'note', style: '' },
+      { icon: '🍺', label: 'Targeted promo', desc: 'A nudge offer can push a quiet table from passive back to active. Try a happy hour extension just for them.', cta: 'Push promo', type: 'promo', style: '' },
+      { icon: '⚡', label: 'Trigger Bounty on this table', desc: 'A Bounty puts a target on them and draws attention — re-engages competitive instinct.', cta: 'Activate Bounty', type: 'bounty', style: '' },
+      { icon: '💬', label: 'Send a personal note', desc: 'A friendly check-in can tip a neutral, quiet table back positive.', cta: 'Write note', type: 'note', style: '' },
     ]
   },
   'T-6': {
-    score: 3, trend: 'stable',
-    context: 'Table 6 at 3/5, stable. Active for 27 minutes. No signals sent. Engagement score is moderate — answering roughly half of questions.',
+    score: 3, trend: 'stable', presence: 'active',
+    context: 'Table 6 at 3/5, active presence — answering questions, tab visible. Session 27 minutes. Engagement is moderate but stable. No signals sent.',
     suggestions: [
       { icon: '⚡', label: 'Trigger Bounty on this table', desc: 'A Bounty puts Table 6 in the spotlight and gives other tables a reason to challenge them.', cta: 'Activate Bounty', type: 'bounty', style: '' },
       { icon: '🍺', label: 'Targeted promo', desc: 'Mid-session is the best time to offer a next-round deal — they\'re still warm.', cta: 'Push promo', type: 'promo', style: '' },
     ]
   },
   'T-11': {
-    score: 5, trend: 'leading',
-    context: 'Table 11 is the crown holder at 5/5 vibe, 520 points. High engagement, 3 consecutive wins. They\'re your MVP table tonight.',
+    score: 5, trend: 'leading', presence: 'active',
+    context: 'Table 11 is the crown holder — 5/5 vibe, 520 points, active presence, 3 consecutive wins. Highest engagement in the room. Your MVP table tonight.',
     suggestions: [
       { icon: '💬', label: 'Send a personal note', desc: 'Acknowledge the streak — people love being recognised. A quick note from staff builds loyalty.', cta: 'Send kudos', type: 'note', style: 'positive-sug' },
-      { icon: '🎁', label: 'Comp as a reward', desc: 'A small complimentary treat for the leading table reinforces that winning means something real.', cta: 'Send reward', type: 'comp', style: 'positive-sug' },
+      { icon: '🎁', label: 'Comp as a reward', desc: 'A small complimentary treat for the crown holder reinforces that winning means something real.', cta: 'Send reward', type: 'comp', style: 'positive-sug' },
     ]
   },
   'T-4': {
-    score: 4, trend: 'rising',
-    context: 'Table 4 at 4/5, rising trend. In second place on the leaderboard, 30 points behind the crown. High answer rate.',
+    score: 4, trend: 'rising', presence: 'active',
+    context: 'Table 4 at 4/5, active presence, rising trend. Second place, 30 points behind the crown. High answer rate — they\'re genuinely trying to win.',
     suggestions: [
       { icon: '⚡', label: 'Trigger Bounty on this table', desc: 'A Bounty on second place heats up the competition and could push them to challenge the crown.', cta: 'Activate Bounty', type: 'bounty', style: 'positive-sug' },
-      { icon: '💬', label: 'Send a personal note', desc: 'Encourage the chase — a "you\'re close!" message from the server adds narrative to the game.', cta: 'Write note', type: 'note', style: '' },
+      { icon: '💬', label: 'Send a personal note', desc: 'Encourage the chase — a "you\'re close!" message adds narrative to the game.', cta: 'Write note', type: 'note', style: '' },
     ]
   },
   'T-7': {
-    score: 4, trend: 'stable',
-    context: 'Table 7 at 4/5, stable. Currently ranked 3rd. Good engagement, answered 7 of last 10 questions. Session active 51 minutes.',
+    score: 4, trend: 'stable', presence: 'active',
+    context: 'Table 7 at 4/5, active presence. Ranked 3rd, answered 7 of last 10 questions. Session active 51 minutes — your longest-dwelling table tonight.',
     suggestions: [
       { icon: '⚡', label: 'Trigger Bounty on this table', desc: 'A Bounty on 3rd place creates a target and could reignite their push for the top.', cta: 'Activate Bounty', type: 'bounty', style: '' },
-      { icon: '🍺', label: 'Targeted promo', desc: 'Reward a long session with a loyalty offer — they\'re your best dwell-time table tonight.', cta: 'Push promo', type: 'promo', style: 'positive-sug' },
+      { icon: '🍺', label: 'Targeted promo', desc: 'Reward your longest session with a loyalty offer — they\'ve earned it.', cta: 'Push promo', type: 'promo', style: 'positive-sug' },
     ]
   },
   'T-3': {
-    score: 3, trend: 'stable',
-    context: 'Table 3 at 3/5. Moderate engagement. An AI Wingman nudge was sent to Table 7 from this table earlier — cross-table interaction attempted.',
+    score: 3, trend: 'stable', presence: 'quiet',
+    context: 'Table 3 at 3/5, gone Quiet — 8 minutes no interaction, tab likely hidden. Earlier sent an AI Wingman nudge to Table 7, so social interest is there. Needs a re-engagement nudge before drifting further.',
     suggestions: [
-      { icon: '🍺', label: 'Targeted promo', desc: 'They tried to connect with another table — a small offer rewards the social behaviour.', cta: 'Push promo', type: 'promo', style: '' },
-      { icon: '💬', label: 'Send a personal note', desc: 'Reference their Wingman nudge to make the interaction feel noticed.', cta: 'Write note', type: 'note', style: '' },
+      { icon: '🍺', label: 'Targeted promo', desc: 'They showed social intent earlier — reward it with a small offer.', cta: 'Push promo', type: 'promo', style: '' },
+      { icon: '💬', label: 'Send a personal note', desc: 'Reference the energy from their Wingman nudge — make it feel noticed.', cta: 'Write note', type: 'note', style: '' },
     ]
   },
   'T-14': {
-    score: 5, trend: 'high',
-    context: 'Table 14 at 5/5. Highest vibe score in the room tonight. Active 38 minutes, strong answer rate.',
+    score: 5, trend: 'high', presence: 'active',
+    context: 'Table 14 at 5/5 — highest vibe score in the room. Active presence, strong answer rate. 38 minutes in.',
     suggestions: [
-      { icon: '💬', label: 'Send a personal note', desc: 'A warm acknowledgment from staff turns a great experience into a memorable one.', cta: 'Send kudos', type: 'note', style: 'positive-sug' },
+      { icon: '💬', label: 'Send a personal note', desc: 'A warm acknowledgment turns a great experience into a memorable one.', cta: 'Send kudos', type: 'note', style: 'positive-sug' },
       { icon: '🎁', label: 'Comp as a reward', desc: 'Reward the best vibe in the room — it\'s a story they\'ll tell when they leave.', cta: 'Send reward', type: 'comp', style: 'positive-sug' },
     ]
   },
@@ -2538,8 +2669,235 @@ function confirmTableTurn(source, tableId) {
   }, 1500);
 }
 
+// ── Group Session Presence ────────────────────────────────────
+// Bar Rail: individual player presence tracked as pip array
+// Each pip = one player: 'active', 'quiet', or 'gone'
+const groupPresence = {
+  barRail: {
+    peak: 8,
+    pips: ['active','active','active','quiet','active','quiet','gone','gone'],
+    lastAnswerMin: 3,
+  },
+  roaming: {
+    peak: 3,
+    pips: ['active','active','active'],
+    lastAnswerMin: 1,
+  },
+};
+
+function renderGroupPresence() {
+  // Bar Rail pips
+  const brBar = document.getElementById('br-pip-bar');
+  const rmBar = document.getElementById('rm-pip-bar');
+  if (brBar) {
+    const active = groupPresence.barRail.pips.filter(p => p === 'active').length;
+    brBar.innerHTML = groupPresence.barRail.pips.map(p =>
+      `<div class="group-presence-pip ${p}"></div>`
+    ).join('');
+    document.getElementById('bar-rail-count').textContent = active;
+    document.getElementById('stb-bar-rail').textContent = `🍺 Bar Rail · ${active} active`;
+  }
+  if (rmBar) {
+    const active = groupPresence.roaming.pips.filter(p => p === 'active').length;
+    rmBar.innerHTML = groupPresence.roaming.pips.map(p =>
+      `<div class="group-presence-pip ${p}"></div>`
+    ).join('');
+    document.getElementById('roaming-count').textContent = active;
+    document.getElementById('stb-roaming').textContent = `🚶 Team Alex · ${active} active`;
+  }
+  updateGroupTotals();
+}
+
+function updateGroupTotals() {
+  const brActive = groupPresence.barRail.pips.filter(p => p === 'active').length;
+  const rmActive = groupPresence.roaming.pips.filter(p => p === 'active').length;
+  const tableActive = Object.keys(presenceState).filter(k => presenceState[k].state === 'active').length;
+  const total = brActive + rmActive + tableActive;
+  const stbTotal = document.getElementById('stb-total');
+  if (stbTotal) stbTotal.textContent = `${total} total active`;
+
+  // Update map node labels
+  const mapNodes = document.querySelectorAll('.table-node, .dash-table-node');
+  mapNodes.forEach(n => {
+    const dot = n.querySelector('.table-dot, .dash-table-dot');
+    if (!dot) return;
+    const label = n.querySelector('.table-label, .dash-table-label');
+    if (dot.textContent.trim() === 'BAR' && label) {
+      label.textContent = `${brActive} active · ${Math.floor(brActive * 52)}pts`;
+      // Dim if all gone or very low
+      if (brActive <= 1) n.classList.add('likely-gone');
+      else if (brActive <= 3) n.classList.add('quiet');
+      else { n.classList.remove('quiet','likely-gone'); }
+    }
+    if (dot.textContent.trim() === 'ALEX' && label) {
+      label.textContent = `${rmActive} roaming`;
+      if (rmActive === 0) n.classList.add('likely-gone');
+      else if (rmActive === 1) n.classList.add('quiet');
+      else { n.classList.remove('quiet','likely-gone'); }
+    }
+  });
+}
+
+// Simulate Bar Rail player drift every 15 seconds
+setInterval(() => {
+  const pips = groupPresence.barRail.pips;
+  const activeIdxs = pips.map((p,i) => p === 'active' ? i : -1).filter(i => i >= 0);
+  if (activeIdxs.length === 0) return;
+
+  // 40% chance one active player goes quiet
+  if (Math.random() < 0.4) {
+    const idx = activeIdxs[Math.floor(Math.random() * activeIdxs.length)];
+    pips[idx] = 'quiet';
+    groupPresence.barRail.lastAnswerMin += 1;
+    renderGroupPresence();
+    const active = pips.filter(p => p === 'active').length;
+    const brTrend = document.getElementById('br-trend');
+    if (brTrend) {
+      brTrend.textContent = `↓ −${8 - active}`;
+      brTrend.className = 'group-count-trend declining';
+    }
+    const brLast = document.getElementById('br-last-active');
+    if (brLast) {
+      brLast.textContent = `Last answer: ${groupPresence.barRail.lastAnswerMin} min ago`;
+      brLast.className = groupPresence.barRail.lastAnswerMin > 4 ? 'group-last-active warn' : 'group-last-active';
+    }
+    if (active <= 3) showToast(`⚠ Bar Rail down to ${active} active players`);
+  }
+
+  // 20% chance a quiet player recovers to active (new person scans)
+  const quietIdxs = pips.map((p,i) => p === 'quiet' ? i : -1).filter(i => i >= 0);
+  if (quietIdxs.length > 0 && Math.random() < 0.2) {
+    const idx = quietIdxs[Math.floor(Math.random() * quietIdxs.length)];
+    pips[idx] = 'active';
+    groupPresence.barRail.lastAnswerMin = 0;
+    renderGroupPresence();
+    const brLast = document.getElementById('br-last-active');
+    if (brLast) { brLast.textContent = 'Last answer: just now'; brLast.className = 'group-last-active'; }
+  }
+}, 15000);
+
+// Init group presence on load
+setTimeout(renderGroupPresence, 600);
+
+// ── Dashboard build calls ─────────────────────────────────────
+buildVibeTimeline();
 buildDwellChart();
 buildDashMap();
+
+// Simulated presence state per session. In production this is
+// computed server-side from WebSocket heartbeat, interaction
+// cadence, and Page Visibility API events.
+const presenceState = {
+  'T-9':  { state: 'likely-gone', score: 18, sinceMin: 17 },
+  'T-2':  { state: 'quiet',       score: 45, sinceMin: 9  },
+  'T-6':  { state: 'active',      score: 88, sinceMin: 1  },
+  'T-11': { state: 'active',      score: 95, sinceMin: 0  },
+  'T-4':  { state: 'active',      score: 91, sinceMin: 0  },
+  'T-7':  { state: 'active',      score: 82, sinceMin: 2  },
+  'T-3':  { state: 'quiet',       score: 42, sinceMin: 8  },
+  'T-14': { state: 'active',      score: 94, sinceMin: 1  },
+};
+
+// Page Visibility API — real signal, affects guest's own session
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    // Tab hidden — in production this triggers a presence score drop
+    showToast('Screen locked — presence score updating…');
+  } else {
+    // Tab visible again — re-sync
+    const rt = document.getElementById('round-timer');
+    if (rt) showToast('Welcome back — session re-synced ✓');
+  }
+});
+
+// Simulate gradual presence drift every 12 seconds
+// Quiet tables drift toward likely-gone; likely-gone can recover
+// if staff takes action (stub — in production driven by real signals)
+setInterval(() => {
+  const ids = Object.keys(presenceState);
+  // Pick one non-active table to drift
+  const candidates = ids.filter(id => presenceState[id].state !== 'active');
+  if (!candidates.length) return;
+  const id = candidates[Math.floor(Math.random() * candidates.length)];
+  const ps = presenceState[id];
+
+  if (ps.state === 'quiet') {
+    // 30% chance drifts to likely-gone
+    if (Math.random() < 0.3) {
+      ps.state = 'likely-gone';
+      ps.score = Math.max(10, ps.score - 15);
+      ps.sinceMin += 3;
+      updatePresenceChip(id, 'likely-gone');
+      updateMapNodePresence(id, 'likely-gone');
+      showToast(`⚠ ${id} drifted to Likely Gone — check in?`);
+    } else {
+      ps.sinceMin += 2;
+      updatePresenceChip(id, 'quiet');
+    }
+  } else if (ps.state === 'likely-gone') {
+    ps.sinceMin += 2;
+    // Ghost Protocol fires at 20 min
+    if (ps.sinceMin >= 20) {
+      showToast(`👻 Ghost Protocol — ${id} session closed`);
+      const chip = document.getElementById(`vpc-${id}`);
+      if (chip) { chip.style.opacity = '0'; setTimeout(() => chip.remove(), 600); }
+      updateMapNodePresence(id, 'closed');
+      delete presenceState[id];
+    }
+  }
+}, 12000);
+
+function updatePresenceChip(tableId, newState) {
+  const chip = document.getElementById(`vpc-${tableId}`);
+  if (!chip) return;
+  const dot = chip.querySelector('.presence-dot');
+  if (dot) {
+    dot.className = `presence-dot ${newState}`;
+  }
+  chip.classList.remove('active', 'quiet', 'likely-gone');
+  if (newState === 'quiet') {
+    chip.classList.add('quiet');
+  } else if (newState === 'likely-gone') {
+    chip.classList.add('likely-gone');
+    if (!chip.classList.contains('flagged')) chip.classList.add('flagged');
+  }
+}
+
+function updateMapNodePresence(tableId, newState) {
+  // Update guest map
+  const nodes = document.querySelectorAll('.table-node');
+  nodes.forEach(n => {
+    const dot = n.querySelector('.table-dot');
+    if (dot && dot.textContent.trim().includes(tableId.replace('T-',''))) {
+      n.classList.remove('quiet', 'likely-gone');
+      if (newState === 'quiet') n.classList.add('quiet');
+      else if (newState === 'likely-gone') n.classList.add('likely-gone');
+      else if (newState === 'closed') { n.style.opacity = '0'; setTimeout(() => n.remove(), 800); }
+    }
+  });
+  // Update dashboard map
+  const dashNodes = document.querySelectorAll('.dash-table-node');
+  dashNodes.forEach(n => {
+    const dot = n.querySelector('.dash-table-dot');
+    if (dot && dot.textContent.trim().includes(tableId.replace('T-',''))) {
+      n.classList.remove('quiet', 'likely-gone');
+      if (newState === 'quiet') n.classList.add('quiet');
+      else if (newState === 'likely-gone') n.classList.add('likely-gone');
+      else if (newState === 'closed') { n.style.opacity = '0'; setTimeout(() => n.remove(), 800); }
+    }
+  });
+}
+
+// Apply initial presence states to map nodes on load
+function applyInitialPresence() {
+  Object.entries(presenceState).forEach(([id, ps]) => {
+    if (ps.state !== 'active') {
+      updateMapNodePresence(id, ps.state);
+    }
+  });
+}
+setTimeout(applyInitialPresence, 500);
+
 
 // Animate vibe bars periodically
 setInterval(() => {
